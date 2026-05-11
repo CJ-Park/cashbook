@@ -1,14 +1,19 @@
 import { requireUser } from "@/features/auth/queries/require-user";
+import {
+  getCategoryReport,
+  parseCategoryReportParams,
+} from "@/features/reports/queries/get-category-report";
+import { CategoryReportScreen } from "@/features/reports/screens/CategoryReportScreen";
 
-export default async function CategoryReportPage() {
+type CategoryReportPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function CategoryReportPage({ searchParams }: CategoryReportPageProps) {
   await requireUser();
+  const params = await searchParams;
+  const condition = parseCategoryReportParams(params);
+  const rows = await getCategoryReport(condition);
 
-  return (
-    <main className="min-h-screen bg-zinc-50 px-5 py-8">
-      <section className="mx-auto w-full max-w-3xl rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-        <h1 className="text-3xl font-bold text-zinc-950">카테고리별 통계</h1>
-        <p className="mt-3 text-lg text-zinc-600">카테고리별 통계는 다음 Phase에서 구현합니다.</p>
-      </section>
-    </main>
-  );
+  return <CategoryReportScreen condition={condition} rows={rows} />;
 }
