@@ -11,7 +11,7 @@ type TransactionEditPageProps = {
 };
 
 export default async function TransactionEditPage({ params }: TransactionEditPageProps) {
-  await requireUser();
+  const user = await requireUser();
 
   const { id } = await params;
   const transactionId = Number(id);
@@ -21,8 +21,8 @@ export default async function TransactionEditPage({ params }: TransactionEditPag
   }
 
   const [categories, transaction] = await Promise.all([
-    getActiveCategories(),
-    getTransactionById(transactionId),
+    getActiveCategories(user.id),
+    getTransactionById(user.id, transactionId),
   ]);
 
   if (!transaction) {

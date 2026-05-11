@@ -1,10 +1,10 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
-import { transactions } from "@/db/schema";
+import { categories, transactions } from "@/db/schema";
 import { requireUser } from "@/features/auth/queries/require-user";
 import type { TransactionType } from "../types";
 
@@ -54,13 +54,27 @@ function parseTransactionForm(formData: FormData) {
   };
 }
 
+async function assertUserCategory(userId: string, categoryId: number) {
+  const [category] = await db
+    .select({ id: categories.id })
+    .from(categories)
+    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId), eq(categories.isActive, true)))
+    .limit(1);
+
+  if (!category) {
+    throw new Error("Category does not belong to current user.");
+  }
+}
+
 export async function createTransaction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const values = parseTransactionForm(formData);
   const intent = getRequiredString(formData, "intent");
 
-  await db.insert(transactions).values(values);
+  await assertUserCategory(user.id, values.categoryId);
+
+  await db.insert(transactions).values({ ...values, userId: user.id });
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
@@ -73,7 +87,7 @@ export async function createTransaction(formData: FormData) {
 }
 
 export async function updateTransaction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const id = Number(getRequiredString(formData, "id"));
 
@@ -82,11 +96,12 @@ export async function updateTransaction(formData: FormData) {
   }
 
   const values = parseTransactionForm(formData);
+  await assertUserCategory(user.id, values.categoryId);
 
   await db
     .update(transactions)
     .set({ ...values, updatedAt: new Date() })
-    .where(eq(transactions.id, id));
+    .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
@@ -96,7 +111,7 @@ export async function updateTransaction(formData: FormData) {
 }
 
 export async function deleteTransaction(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const id = Number(getRequiredString(formData, "id"));
 
@@ -104,7 +119,7 @@ export async function deleteTransaction(formData: FormData) {
     throw new Error("Transaction id is required.");
   }
 
-  await db.delete(transactions).where(eq(transactions.id, id));
+  await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");

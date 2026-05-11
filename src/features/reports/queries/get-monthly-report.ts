@@ -1,9 +1,9 @@
-import { and, gte, lt, sql } from "drizzle-orm";
+import { and, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db/client";
 import { transactions } from "@/db/schema";
 import type { MonthlyReportRow } from "../types";
 
-export async function getMonthlyReport(year: number): Promise<MonthlyReportRow[]> {
+export async function getMonthlyReport(userId: string, year: number): Promise<MonthlyReportRow[]> {
   const startDate = `${year}-01-01`;
   const endDate = `${year + 1}-01-01`;
   const month = sql<number>`extract(month from ${transactions.transactionDate})::int`;
@@ -15,7 +15,13 @@ export async function getMonthlyReport(year: number): Promise<MonthlyReportRow[]
       totalExpense: sql<number>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)::int`,
     })
     .from(transactions)
-    .where(and(gte(transactions.transactionDate, startDate), lt(transactions.transactionDate, endDate)))
+    .where(
+      and(
+        gte(transactions.transactionDate, startDate),
+        lt(transactions.transactionDate, endDate),
+        eq(transactions.userId, userId),
+      ),
+    )
     .groupBy(month);
 
   const byMonth = new Map(rows.map((row) => [Number(row.month), row]));

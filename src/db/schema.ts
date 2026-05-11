@@ -24,6 +24,7 @@ export const categories = pgTable(
   "categories",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: uuid("user_id"),
     name: text("name").notNull(),
     type: text("type", { enum: ["INCOME", "EXPENSE", "COMMON"] }).notNull(),
     sortOrder: integer("sort_order").notNull().default(0),
@@ -32,7 +33,8 @@ export const categories = pgTable(
   },
   (table) => [
     check("categories_type_check", sql`${table.type} in ('INCOME', 'EXPENSE', 'COMMON')`),
-    uniqueIndex("idx_categories_name_type_unique").on(table.name, table.type),
+    uniqueIndex("idx_categories_user_name_type_unique").on(table.userId, table.name, table.type),
+    index("idx_categories_user_active").on(table.userId, table.isActive),
   ],
 );
 
@@ -40,6 +42,7 @@ export const transactions = pgTable(
   "transactions",
   {
     id: bigserial("id", { mode: "number" }).primaryKey(),
+    userId: uuid("user_id"),
     transactionDate: date("transaction_date").notNull(),
     type: text("type", { enum: ["INCOME", "EXPENSE"] }).notNull(),
     categoryId: bigint("category_id", { mode: "number" })
@@ -55,6 +58,7 @@ export const transactions = pgTable(
   (table) => [
     check("transactions_type_check", sql`${table.type} in ('INCOME', 'EXPENSE')`),
     check("transactions_amount_check", sql`${table.amount} >= 0`),
+    index("idx_transactions_user_date").on(table.userId, table.transactionDate),
     index("idx_transactions_date").on(table.transactionDate),
     index("idx_transactions_type_date").on(table.type, table.transactionDate),
     index("idx_transactions_category_date").on(table.categoryId, table.transactionDate),

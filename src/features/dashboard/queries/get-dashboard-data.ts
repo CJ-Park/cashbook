@@ -30,7 +30,7 @@ function getMonthRange(now: Date) {
   };
 }
 
-export async function getDashboardData(now = new Date()): Promise<DashboardData> {
+export async function getDashboardData(userId: string, now = new Date()): Promise<DashboardData> {
   const { startDate, endDate } = getMonthRange(now);
 
   const [summary] = await db
@@ -39,7 +39,13 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
       totalExpense: sql<number>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)::int`,
     })
     .from(transactions)
-    .where(and(gte(transactions.transactionDate, startDate), lt(transactions.transactionDate, endDate)));
+    .where(
+      and(
+        eq(transactions.userId, userId),
+        gte(transactions.transactionDate, startDate),
+        lt(transactions.transactionDate, endDate),
+      ),
+    );
 
   const recentTransactions = await db
     .select({
@@ -52,6 +58,7 @@ export async function getDashboardData(now = new Date()): Promise<DashboardData>
     })
     .from(transactions)
     .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .where(eq(transactions.userId, userId))
     .orderBy(desc(transactions.transactionDate), desc(transactions.id))
     .limit(10);
 

@@ -9,12 +9,12 @@ type TransactionsPageProps = {
 };
 
 export default async function TransactionsPage({ searchParams }: TransactionsPageProps) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const condition = parseTransactionSearchParams(params);
   const [categories, result] = await Promise.all([
-    getActiveCategories(),
-    getTransactions(condition),
+    getActiveCategories(user.id),
+    getTransactions(user.id, condition),
   ]);
 
   return <TransactionListScreen categories={categories} condition={condition} result={result} />;

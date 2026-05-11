@@ -10,10 +10,10 @@ type CategoryReportPageProps = {
 };
 
 export default async function CategoryReportPage({ searchParams }: CategoryReportPageProps) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const condition = parseCategoryReportParams(params);
-  const rows = await getCategoryReport(condition);
+  const rows = await getCategoryReport(user.id, condition);
 
   return <CategoryReportScreen condition={condition} rows={rows} />;
 }
