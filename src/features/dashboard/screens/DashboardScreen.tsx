@@ -31,6 +31,12 @@ export function DashboardScreen({ email, data }: DashboardScreenProps) {
             >
               카테고리 관리
             </Link>
+            <Link
+              href="/reports"
+              className="flex min-h-12 items-center justify-center rounded-md border border-zinc-300 bg-white px-5 text-base font-bold text-zinc-900 shadow-sm hover:bg-zinc-100"
+            >
+              통계 보기
+            </Link>
             <LogoutButton />
           </div>
         </header>
