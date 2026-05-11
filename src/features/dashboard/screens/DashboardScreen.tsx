@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { LogoutButton } from "@/features/auth/components/LogoutButton";
-import type { DashboardData } from "../queries/get-dashboard-data";
 import { formatCurrency, formatDate } from "@/shared/utils/format";
+import type { DashboardData } from "../queries/get-dashboard-data";
 
 type DashboardScreenProps = {
   email?: string;
@@ -24,6 +24,12 @@ export function DashboardScreen({ email, data }: DashboardScreenProps) {
               className="flex min-h-12 items-center justify-center rounded-md bg-zinc-900 px-5 text-base font-bold text-white shadow-sm hover:bg-zinc-800"
             >
               입출금 등록
+            </Link>
+            <Link
+              href="/categories"
+              className="flex min-h-12 items-center justify-center rounded-md border border-zinc-300 bg-white px-5 text-base font-bold text-zinc-900 shadow-sm hover:bg-zinc-100"
+            >
+              카테고리 관리
             </Link>
             <LogoutButton />
           </div>
