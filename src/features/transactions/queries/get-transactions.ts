@@ -5,9 +5,10 @@ import type { TransactionSearchCondition, TransactionSearchResult } from "../typ
 import { buildTransactionConditions } from "./search-conditions";
 
 export async function getTransactions(
+  userId: string,
   condition: TransactionSearchCondition,
 ): Promise<TransactionSearchResult> {
-  const where = buildTransactionConditions(condition);
+  const where = buildTransactionConditions(userId, condition);
 
   const rows = await db
     .select({

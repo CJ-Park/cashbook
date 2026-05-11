@@ -21,9 +21,10 @@ export function parseCategoryReportParams(
 }
 
 export async function getCategoryReport(
+  userId: string,
   condition: CategoryReportCondition,
 ): Promise<CategoryReportRow[]> {
-  const conditions: SQL[] = [];
+  const conditions: SQL[] = [eq(transactions.userId, userId)];
 
   if (condition.startDate) {
     conditions.push(gte(transactions.transactionDate, condition.startDate));

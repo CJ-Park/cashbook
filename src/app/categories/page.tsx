@@ -3,8 +3,8 @@ import { getCategoriesWithTransactionCount } from "@/features/categories/queries
 import { CategoryScreen } from "@/features/categories/screens/CategoryScreen";
 
 export default async function CategoriesPage() {
-  await requireUser();
-  const categories = await getCategoriesWithTransactionCount();
+  const user = await requireUser();
+  const categories = await getCategoriesWithTransactionCount(user.id);
 
   return <CategoryScreen categories={categories} />;
 }

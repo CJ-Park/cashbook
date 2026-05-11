@@ -22,8 +22,8 @@ export function parseTransactionSearchParams(
   };
 }
 
-export function buildTransactionConditions(condition: TransactionSearchCondition) {
-  const conditions: SQL[] = [];
+export function buildTransactionConditions(userId: string, condition: TransactionSearchCondition) {
+  const conditions: SQL[] = [eq(transactions.userId, userId)];
 
   if (condition.startDate) {
     conditions.push(gte(transactions.transactionDate, condition.startDate));

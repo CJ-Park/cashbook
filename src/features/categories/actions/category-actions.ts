@@ -1,6 +1,6 @@
 "use server";
 
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { categories } from "@/db/schema";
@@ -30,7 +30,7 @@ function parseSortOrder(value: string) {
 }
 
 export async function createCategory(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const name = getString(formData, "name");
 
@@ -39,6 +39,7 @@ export async function createCategory(formData: FormData) {
   }
 
   await db.insert(categories).values({
+    userId: user.id,
     name,
     type: parseCategoryType(getString(formData, "type")),
     sortOrder: parseSortOrder(getString(formData, "sortOrder")),
@@ -49,7 +50,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const id = Number(getString(formData, "id"));
   const name = getString(formData, "name");
@@ -65,14 +66,14 @@ export async function updateCategory(formData: FormData) {
       type: parseCategoryType(getString(formData, "type")),
       sortOrder: parseSortOrder(getString(formData, "sortOrder")),
     })
-    .where(eq(categories.id, id));
+    .where(and(eq(categories.id, id), eq(categories.userId, user.id)));
 
   revalidatePath("/categories");
   revalidatePath("/transactions");
 }
 
 export async function toggleCategoryActive(formData: FormData) {
-  await requireUser();
+  const user = await requireUser();
 
   const id = Number(getString(formData, "id"));
   const isActive = getString(formData, "isActive") === "true";
@@ -81,7 +82,10 @@ export async function toggleCategoryActive(formData: FormData) {
     throw new Error("Category id is required.");
   }
 
-  await db.update(categories).set({ isActive }).where(eq(categories.id, id));
+  await db
+    .update(categories)
+    .set({ isActive })
+    .where(and(eq(categories.id, id), eq(categories.userId, user.id)));
 
   revalidatePath("/categories");
   revalidatePath("/transactions");

@@ -9,8 +9,8 @@ type TransactionNewPageProps = {
 };
 
 export default async function TransactionNewPage({ searchParams }: TransactionNewPageProps) {
-  await requireUser();
-  const [categories, params] = await Promise.all([getActiveCategories(), searchParams]);
+  const user = await requireUser();
+  const [categories, params] = await Promise.all([getActiveCategories(user.id), searchParams]);
 
   return <TransactionCreateScreen categories={categories} saved={params.saved === "1"} />;
 }

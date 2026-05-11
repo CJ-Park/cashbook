@@ -9,12 +9,12 @@ type MonthlyReportPageProps = {
 };
 
 export default async function MonthlyReportPage({ searchParams }: MonthlyReportPageProps) {
-  await requireUser();
+  const user = await requireUser();
   const params = await searchParams;
   const currentYear = new Date().getFullYear();
   const year = Number(params.year || currentYear);
   const safeYear = Number.isInteger(year) && year >= 2000 && year <= 2100 ? year : currentYear;
-  const rows = await getMonthlyReport(safeYear);
+  const rows = await getMonthlyReport(user.id, safeYear);
 
   return <MonthlyReportScreen year={safeYear} rows={rows} />;
 }
