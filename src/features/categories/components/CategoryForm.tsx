@@ -1,5 +1,6 @@
 import type { CategoryRow } from "../types";
 import { createCategory, updateCategory } from "../actions/category-actions";
+import { SubmitButton } from "@/shared/components/ui/SubmitButton";
 
 type CategoryFormProps = {
   category?: CategoryRow;
@@ -9,49 +10,63 @@ export function CategoryForm({ category }: CategoryFormProps) {
   const action = category ? updateCategory : createCategory;
 
   return (
-    <form action={action} className="grid gap-3 rounded-lg border border-zinc-200 bg-white p-4 shadow-sm md:grid-cols-[1fr_140px_120px_auto] md:items-end">
+    <form
+      action={action}
+      className={`grid gap-4 ${
+        category
+          ? "md:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] md:items-end"
+          : "md:grid-cols-[minmax(0,1fr)_12rem_auto] md:items-end"
+      }`}
+    >
       {category ? <input type="hidden" name="id" value={category.id} /> : null}
+      {!category ? <input type="hidden" name="sortOrder" value="0" /> : null}
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-zinc-700">카테고리명</span>
+        <span className="field-label">카테고리 이름</span>
         <input
           name="name"
           type="text"
           required
+          maxLength={50}
+          autoComplete="off"
+          placeholder="예: 재료비, 판매수입"
           defaultValue={category?.name}
-          className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-base"
+          className="field-control"
         />
       </label>
 
       <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-zinc-700">구분</span>
+        <span className="field-label">사용할 곳</span>
         <select
           name="type"
           defaultValue={category?.type ?? "EXPENSE"}
-          className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-base"
+          className="field-control"
         >
-          <option value="INCOME">입금</option>
-          <option value="EXPENSE">출금</option>
-          <option value="COMMON">공통</option>
+          <option value="EXPENSE">출금에 사용</option>
+          <option value="INCOME">입금에 사용</option>
+          <option value="COMMON">입금·출금 공통</option>
         </select>
       </label>
 
-      <label className="block">
-        <span className="mb-2 block text-sm font-semibold text-zinc-700">정렬</span>
-        <input
-          name="sortOrder"
-          type="number"
-          defaultValue={category?.sortOrder ?? 0}
-          className="min-h-11 w-full rounded-md border border-zinc-300 px-3 text-base"
-        />
-      </label>
+      {category ? (
+        <label className="block">
+          <span className="field-label">표시 순서</span>
+          <input
+            name="sortOrder"
+            type="number"
+            inputMode="numeric"
+            defaultValue={category.sortOrder}
+            className="field-control money"
+          />
+        </label>
+      ) : null}
 
-      <button
-        type="submit"
-        className="min-h-11 rounded-md bg-zinc-900 px-5 text-base font-bold text-white hover:bg-zinc-800"
+      <SubmitButton
+        pendingLabel={category ? "저장 중..." : "추가 중..."}
+        className="button-primary min-h-13 w-full md:w-auto"
       >
-        {category ? "수정" : "추가"}
-      </button>
+        {category ? "변경 저장" : "카테고리 추가"}
+      </SubmitButton>
     </form>
   );
 }

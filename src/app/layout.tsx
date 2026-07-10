@@ -1,9 +1,17 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "cashbook",
-  description: "어머니 전용 개인 입출금 장부",
+  title: {
+    default: "살림장부",
+    template: "%s | 살림장부",
+  },
+  description: "입금과 출금을 쉽고 편하게 기록하는 우리 가족 장부",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "light",
+  themeColor: "#f4f7f9",
 };
 
 export default function RootLayout({
@@ -13,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko" className="h-full antialiased">
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">{children}</body>
     </html>
   );
 }

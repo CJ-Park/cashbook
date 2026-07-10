@@ -1,5 +1,7 @@
 "use client";
 
+import { SubmitButton } from "@/shared/components/ui/SubmitButton";
+
 type DeleteTransactionButtonProps = {
   id: number;
   action: (formData: FormData) => void | Promise<void>;
@@ -9,6 +11,7 @@ export function DeleteTransactionButton({ id, action }: DeleteTransactionButtonP
   return (
     <form
       action={action}
+      className="flex"
       onSubmit={(event) => {
         if (!window.confirm("이 입출금 내역을 삭제할까요?")) {
           event.preventDefault();
@@ -16,9 +19,12 @@ export function DeleteTransactionButton({ id, action }: DeleteTransactionButtonP
       }}
     >
       <input type="hidden" name="id" value={id} />
-      <button type="submit" className="font-semibold text-red-600 hover:text-red-700">
+      <SubmitButton
+        pendingLabel="삭제 중..."
+        className="button-danger min-h-11 w-full px-3 py-2 text-sm sm:w-auto"
+      >
         삭제
-      </button>
+      </SubmitButton>
     </form>
   );
 }

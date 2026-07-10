@@ -1,26 +1,275 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --canvas: #f4f7f9;
+  --surface: #ffffff;
+  --surface-soft: #eef3f6;
+  --surface-tint: #e9f2f7;
+  --text: #17222d;
+  --text-soft: #5b6875;
+  --text-faint: #7d8994;
+  --border: #dce4e9;
+  --border-strong: #c8d3da;
+  --primary: #1d4d6b;
+  --primary-hover: #163d56;
+  --primary-soft: #e5f0f6;
+  --income: #08775b;
+  --income-soft: #e5f5ef;
+  --expense: #b7463e;
+  --expense-soft: #fbecea;
+  --warning: #9a6714;
+  --warning-soft: #fff5dd;
+  --danger: #b42318;
+  --danger-soft: #fff0ee;
+  --shadow-sm: 0 1px 2px rgb(23 34 45 / 0.05), 0 8px 24px rgb(23 34 45 / 0.04);
+  --shadow-md: 0 2px 4px rgb(23 34 45 / 0.05), 0 18px 45px rgb(23 34 45 / 0.08);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: Arial, Helvetica, sans-serif;
-  --font-mono: "Courier New", Courier, monospace;
+  --color-background: var(--canvas);
+  --color-foreground: var(--text);
+  --font-sans: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html {
+  min-width: 320px;
+  background: var(--canvas);
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  background:
+    radial-gradient(circle at 92% -10%, rgb(210 232 241 / 0.72), transparent 28rem),
+    var(--canvas);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.6;
+  text-rendering: optimizeLegibility;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
+::selection {
+  background: #c9e3ef;
+  color: var(--text);
+}
+
+:focus-visible {
+  outline: 3px solid rgb(29 77 107 / 0.3);
+  outline-offset: 3px;
+}
+
+.skip-link {
+  position: fixed;
+  z-index: 100;
+  top: 0.75rem;
+  left: 0.75rem;
+  transform: translateY(-150%);
+  border-radius: 0.75rem;
+  background: var(--primary);
+  padding: 0.75rem 1rem;
+  color: #fff;
+  font-weight: 800;
+  transition: transform 160ms ease;
+}
+
+.skip-link:focus {
+  transform: translateY(0);
+}
+
+.surface-card {
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+}
+
+.field-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--text);
+  font-size: 0.9375rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+}
+
+.field-control {
+  min-height: 3.25rem;
+  width: 100%;
+  border: 1px solid var(--border-strong);
+  border-radius: 0.875rem;
+  background: var(--surface);
+  padding: 0.75rem 0.95rem;
+  color: var(--text);
+  font-size: 1rem;
+  transition: border-color 150ms ease, box-shadow 150ms ease, background 150ms ease;
+}
+
+.field-control::placeholder {
+  color: #919ba4;
+}
+
+.field-control:hover {
+  border-color: #aab9c3;
+}
+
+.field-control:focus {
+  border-color: var(--primary);
+  outline: none;
+  box-shadow: 0 0 0 4px rgb(29 77 107 / 0.12);
+}
+
+.field-control:disabled {
+  background: var(--surface-soft);
+  color: var(--text-faint);
+}
+
+select.field-control {
+  padding-right: 2.5rem;
+}
+
+textarea.field-control {
+  min-height: 6.5rem;
+  resize: vertical;
+}
+
+.button-primary,
+.button-secondary,
+.button-quiet,
+.button-danger {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.875rem;
+  padding: 0.7rem 1.15rem;
+  font-weight: 800;
+  line-height: 1.2;
+  text-align: center;
+  transition: transform 150ms ease, background 150ms ease, border-color 150ms ease,
+    color 150ms ease, box-shadow 150ms ease;
+}
+
+.button-primary {
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  box-shadow: 0 8px 18px rgb(29 77 107 / 0.18);
+}
+
+.button-primary:hover {
+  border-color: var(--primary-hover);
+  background: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+.button-secondary {
+  border: 1px solid var(--border-strong);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.button-secondary:hover {
+  border-color: #9fb0ba;
+  background: var(--surface-soft);
+}
+
+.button-quiet {
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--primary);
+}
+
+.button-quiet:hover {
+  background: var(--primary-soft);
+}
+
+.button-danger {
+  border: 1px solid #efc9c4;
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.button-danger:hover {
+  border-color: #dfa39b;
+  background: #ffe4e0;
+}
+
+.button-primary:disabled,
+.button-secondary:disabled,
+.button-quiet:disabled,
+.button-danger:disabled {
+  cursor: wait;
+  opacity: 0.58;
+  transform: none;
+}
+
+.money {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+}
+
+.text-income {
+  color: var(--income);
+}
+
+.text-expense {
+  color: var(--expense);
+}
+
+.text-balance {
+  color: var(--primary);
+}
+
+.scrollbar-subtle {
+  scrollbar-color: #c5d1d8 transparent;
+  scrollbar-width: thin;
+}
+
+@media (max-width: 1023px) {
+  body {
+    background:
+      radial-gradient(circle at 100% -5%, rgb(210 232 241 / 0.58), transparent 20rem),
+      var(--canvas);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }

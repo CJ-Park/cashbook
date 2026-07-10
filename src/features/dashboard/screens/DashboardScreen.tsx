@@ -1,110 +1,194 @@
 import Link from "next/link";
-import { LogoutButton } from "@/features/auth/components/LogoutButton";
+import { AppShell } from "@/shared/components/layout/AppShell";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
+import { SummaryCard } from "@/shared/components/ui/SummaryCard";
+import { TypeBadge } from "@/shared/components/ui/TypeBadge";
 import { formatCurrency, formatDate } from "@/shared/utils/format";
-import type { DashboardData } from "../queries/get-dashboard-data";
+import type { DashboardData, DashboardTransaction } from "../queries/get-dashboard-data";
 
 type DashboardScreenProps = {
   email?: string;
   data: DashboardData;
 };
 
-export function DashboardScreen({ email, data }: DashboardScreenProps) {
-  return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-6 sm:px-6">
-      <section className="mx-auto flex w-full max-w-5xl flex-col gap-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-base font-semibold text-zinc-500">cashbook</p>
-            <h1 className="mt-1 text-3xl font-bold text-zinc-950">대시보드</h1>
-            {email ? <p className="mt-2 text-base text-zinc-600">{email}</p> : null}
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row">
-            <Link
-              href="/transactions/new"
-              className="flex min-h-12 items-center justify-center rounded-md bg-zinc-900 px-5 text-base font-bold text-white shadow-sm hover:bg-zinc-800"
-            >
-              입출금 등록
-            </Link>
-            <Link
-              href="/categories"
-              className="flex min-h-12 items-center justify-center rounded-md border border-zinc-300 bg-white px-5 text-base font-bold text-zinc-900 shadow-sm hover:bg-zinc-100"
-            >
-              카테고리 관리
-            </Link>
-            <Link
-              href="/reports"
-              className="flex min-h-12 items-center justify-center rounded-md border border-zinc-300 bg-white px-5 text-base font-bold text-zinc-900 shadow-sm hover:bg-zinc-100"
-            >
-              통계 보기
-            </Link>
-            <LogoutButton />
-          </div>
-        </header>
+export function DashboardScreen({ data }: DashboardScreenProps) {
+  const balanceHint = data.balance >= 0 ? "입금이 출금보다 많아요" : "출금이 입금보다 많아요";
 
-        <section className="grid gap-4 sm:grid-cols-3">
-          <SummaryCard label={`${data.monthLabel} 입금`} value={formatCurrency(data.totalIncome)} />
-          <SummaryCard label={`${data.monthLabel} 출금`} value={formatCurrency(data.totalExpense)} />
-          <SummaryCard label={`${data.monthLabel} 차액`} value={formatCurrency(data.balance)} />
+  return (
+    <AppShell activeSection="dashboard">
+      <div className="flex flex-col gap-8 lg:gap-10">
+        <PageHeader
+          eyebrow={`${data.monthLabel} 장부`}
+          title="한눈에 보기"
+          description="이번 달 입금과 출금 흐름을 확인하고, 필요한 내역을 바로 기록하세요."
+          action={
+            <Link href="/transactions/new" className="button-primary w-full sm:w-auto">
+              <span aria-hidden="true" className="text-xl leading-none">
+                +
+              </span>
+              새 내역 등록
+            </Link>
+          }
+        />
+
+        <section aria-labelledby="monthly-summary-title">
+          <div className="mb-4 flex flex-wrap items-end justify-between gap-2">
+            <div>
+              <h2 id="monthly-summary-title" className="text-xl font-black tracking-[-0.03em] text-[var(--text)]">
+                이번 달 핵심 요약
+              </h2>
+              <p className="mt-1 text-sm text-[var(--text-soft)]">{data.monthLabel} 전체 내역 기준입니다.</p>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <SummaryCard
+              label="입금 합계"
+              value={formatCurrency(data.totalIncome)}
+              tone="income"
+              hint="이번 달 들어온 돈"
+            />
+            <SummaryCard
+              label="출금 합계"
+              value={formatCurrency(data.totalExpense)}
+              tone="expense"
+              hint="이번 달 나간 돈"
+            />
+            <div className="sm:col-span-2 xl:col-span-1">
+              <SummaryCard
+                label="현재 차액"
+                value={formatCurrency(data.balance)}
+                tone={data.balance < 0 ? "expense" : "balance"}
+                hint={balanceHint}
+                featured
+              />
+            </div>
+          </div>
         </section>
 
-        <section className="rounded-lg border border-zinc-200 bg-white shadow-sm">
-          <div className="border-b border-zinc-200 p-5">
-            <h2 className="text-2xl font-bold text-zinc-950">최근 입출금 내역</h2>
-          </div>
+        <section aria-labelledby="recent-transactions-title" className="surface-card overflow-hidden">
+          <header className="flex flex-col gap-4 border-b border-[var(--border)] p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6">
+            <div>
+              <h2
+                id="recent-transactions-title"
+                className="text-xl font-black tracking-[-0.03em] text-[var(--text)] sm:text-2xl"
+              >
+                최근 입출금 내역
+              </h2>
+              <p className="mt-1 text-sm leading-6 text-[var(--text-soft)]">
+                가장 최근에 기록한 내역을 최대 10건까지 보여드려요.
+              </p>
+            </div>
+            <Link href="/transactions" className="button-secondary w-full shrink-0 sm:w-auto">
+              전체 내역 보기
+              <span aria-hidden="true">→</span>
+            </Link>
+          </header>
 
           {data.recentTransactions.length === 0 ? (
-            <div className="p-8 text-center">
-              <p className="text-lg font-semibold text-zinc-700">아직 등록된 입출금 내역이 없습니다.</p>
-              <Link
-                href="/transactions/new"
-                className="mt-5 inline-flex min-h-12 items-center justify-center rounded-md bg-zinc-900 px-5 text-base font-bold text-white shadow-sm hover:bg-zinc-800"
+            <div className="px-5 py-12 text-center sm:px-8 sm:py-16">
+              <span
+                aria-hidden="true"
+                className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-[var(--primary-soft)] text-2xl font-black text-[var(--primary)]"
               >
+                +
+              </span>
+              <h3 className="mt-4 text-lg font-black text-[var(--text)]">아직 등록된 내역이 없어요</h3>
+              <p className="mt-2 text-base text-[var(--text-soft)]">첫 입출금 내역을 간단하게 기록해보세요.</p>
+              <Link href="/transactions/new" className="button-primary mt-6">
                 첫 내역 등록하기
               </Link>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[720px] border-collapse text-left">
-                <thead className="bg-zinc-100 text-sm font-semibold text-zinc-600">
-                  <tr>
-                    <th className="px-5 py-3">날짜</th>
-                    <th className="px-5 py-3">구분</th>
-                    <th className="px-5 py-3">카테고리</th>
-                    <th className="px-5 py-3">내용</th>
-                    <th className="px-5 py-3 text-right">금액</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-100">
-                  {data.recentTransactions.map((transaction) => (
-                    <tr key={transaction.id}>
-                      <td className="px-5 py-4 text-zinc-700">
-                        {formatDate(transaction.transactionDate)}
-                      </td>
-                      <td className="px-5 py-4 font-semibold text-zinc-900">
-                        {transaction.type === "INCOME" ? "입금" : "출금"}
-                      </td>
-                      <td className="px-5 py-4 text-zinc-700">{transaction.categoryName}</td>
-                      <td className="px-5 py-4 text-zinc-900">{transaction.title}</td>
-                      <td className="px-5 py-4 text-right font-bold text-zinc-950">
-                        {formatCurrency(transaction.amount)}
-                      </td>
+            <>
+              <div className="divide-y divide-[var(--border)] lg:hidden">
+                {data.recentTransactions.map((transaction) => (
+                  <RecentTransactionCard key={transaction.id} transaction={transaction} />
+                ))}
+              </div>
+
+              <div className="scrollbar-subtle hidden overflow-x-auto lg:block">
+                <table className="w-full min-w-[720px] border-collapse text-left">
+                  <caption className="sr-only">최근 입출금 내역 10건</caption>
+                  <thead className="bg-[var(--surface-soft)] text-sm font-extrabold text-[var(--text-soft)]">
+                    <tr>
+                      <th scope="col" className="px-6 py-3.5">
+                        날짜
+                      </th>
+                      <th scope="col" className="px-4 py-3.5">
+                        구분
+                      </th>
+                      <th scope="col" className="px-4 py-3.5">
+                        카테고리
+                      </th>
+                      <th scope="col" className="px-4 py-3.5">
+                        내용
+                      </th>
+                      <th scope="col" className="px-6 py-3.5 text-right">
+                        금액
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border)]">
+                    {data.recentTransactions.map((transaction) => (
+                      <tr key={transaction.id} className="transition-colors hover:bg-[var(--surface-soft)]/65">
+                        <td className="whitespace-nowrap px-6 py-4 text-sm font-semibold text-[var(--text-soft)]">
+                          <time dateTime={transaction.transactionDate}>{formatDate(transaction.transactionDate)}</time>
+                        </td>
+                        <td className="px-4 py-4">
+                          <TypeBadge type={transaction.type} compact />
+                        </td>
+                        <td className="px-4 py-4 text-sm font-semibold text-[var(--text-soft)]">
+                          {transaction.categoryName}
+                        </td>
+                        <td className="max-w-xs px-4 py-4 font-bold text-[var(--text)]">
+                          <span className="line-clamp-2">{transaction.title}</span>
+                        </td>
+                        <td
+                          className={`money whitespace-nowrap px-6 py-4 text-right text-base font-black ${
+                            transaction.type === "INCOME" ? "text-income" : "text-expense"
+                          }`}
+                        >
+                          {formatCurrency(transaction.amount)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )}
         </section>
-      </section>
-    </main>
+      </div>
+    </AppShell>
   );
 }
 
-function SummaryCard({ label, value }: { label: string; value: string }) {
+function RecentTransactionCard({ transaction }: { transaction: DashboardTransaction }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-5 shadow-sm">
-      <p className="text-base font-semibold text-zinc-500">{label}</p>
-      <p className="mt-3 text-3xl font-bold text-zinc-950">{value}</p>
-    </div>
+    <article className="p-5 sm:p-6">
+      <div className="flex items-center justify-between gap-3">
+        <TypeBadge type={transaction.type} compact />
+        <time dateTime={transaction.transactionDate} className="text-sm font-semibold text-[var(--text-faint)]">
+          {formatDate(transaction.transactionDate)}
+        </time>
+      </div>
+
+      <div className="mt-4 flex items-end justify-between gap-4">
+        <div className="min-w-0">
+          <h3 className="truncate text-lg font-black text-[var(--text)]">{transaction.title}</h3>
+          <p className="mt-1 truncate text-sm font-semibold text-[var(--text-soft)]">
+            {transaction.categoryName}
+          </p>
+        </div>
+        <p
+          className={`money shrink-0 text-lg font-black ${
+            transaction.type === "INCOME" ? "text-income" : "text-expense"
+          }`}
+        >
+          {formatCurrency(transaction.amount)}
+        </p>
+      </div>
+    </article>
   );
 }

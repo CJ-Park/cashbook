@@ -1,5 +1,6 @@
-import Link from "next/link";
 import type { Category, Transaction } from "@/db/schema";
+import { AppShell } from "@/shared/components/layout/AppShell";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { updateTransaction } from "../actions/transaction-actions";
 import { TransactionForm } from "../components/TransactionForm";
 
@@ -10,14 +11,14 @@ type TransactionEditScreenProps = {
 
 export function TransactionEditScreen({ categories, transaction }: TransactionEditScreenProps) {
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-6 sm:px-6">
-      <section className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-        <header>
-          <Link href="/transactions" className="text-base font-semibold text-zinc-600 hover:text-zinc-950">
-            입출금 목록
-          </Link>
-          <h1 className="mt-3 text-3xl font-bold text-zinc-950">입출금 수정</h1>
-        </header>
+    <AppShell activeSection="transactions">
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <PageHeader
+          title="입출금 내역 수정"
+          description="수정할 내용을 확인하고 저장해주세요."
+          backHref="/transactions"
+          backLabel="입출금 목록"
+        />
 
         <TransactionForm
           mode="edit"
@@ -35,6 +36,6 @@ export function TransactionEditScreen({ categories, transaction }: TransactionEd
           }}
         />
       </section>
-    </main>
+    </AppShell>
   );
 }

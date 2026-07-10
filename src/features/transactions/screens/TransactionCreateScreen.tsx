@@ -1,5 +1,6 @@
-import Link from "next/link";
 import type { Category } from "@/db/schema";
+import { AppShell } from "@/shared/components/layout/AppShell";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { toDateInputValue } from "@/shared/utils/format";
 import { createTransaction } from "../actions/transaction-actions";
 import { TransactionForm } from "../components/TransactionForm";
@@ -11,19 +12,26 @@ type TransactionCreateScreenProps = {
 
 export function TransactionCreateScreen({ categories, saved }: TransactionCreateScreenProps) {
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-6 sm:px-6">
-      <section className="mx-auto flex w-full max-w-2xl flex-col gap-5">
-        <header>
-          <Link href="/transactions" className="text-base font-semibold text-zinc-600 hover:text-zinc-950">
-            입출금 목록
-          </Link>
-          <h1 className="mt-3 text-3xl font-bold text-zinc-950">입출금 등록</h1>
-        </header>
+    <AppShell activeSection="new">
+      <section className="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <PageHeader
+          title="새 입출금 등록"
+          description="날짜와 구분, 카테고리, 금액을 확인한 뒤 저장해주세요."
+          backHref="/transactions"
+          backLabel="입출금 목록"
+        />
 
         {saved ? (
-          <p className="rounded-md bg-green-50 px-4 py-3 text-base font-semibold text-green-700">
-            저장했습니다. 이어서 입력할 수 있습니다.
-          </p>
+          <div
+            role="status"
+            aria-live="polite"
+            className="flex items-start gap-3 rounded-2xl border border-[#b9dfd1] bg-[var(--income-soft)] px-4 py-3.5 text-[var(--income)]"
+          >
+            <span aria-hidden="true" className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-[var(--income)] text-sm font-black text-white">
+              ✓
+            </span>
+            <p className="font-extrabold">저장했습니다. 새 내역을 이어서 입력할 수 있어요.</p>
+          </div>
         ) : null}
 
         <TransactionForm
@@ -36,6 +44,6 @@ export function TransactionCreateScreen({ categories, saved }: TransactionCreate
           }}
         />
       </section>
-    </main>
+    </AppShell>
   );
 }

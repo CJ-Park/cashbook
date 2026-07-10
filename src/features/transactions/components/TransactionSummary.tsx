@@ -1,3 +1,4 @@
+import { SummaryCard } from "@/shared/components/ui/SummaryCard";
 import { formatCurrency } from "@/shared/utils/format";
 
 type TransactionSummaryProps = {
@@ -8,19 +9,10 @@ type TransactionSummaryProps = {
 
 export function TransactionSummary({ totalIncome, totalExpense, balance }: TransactionSummaryProps) {
   return (
-    <section className="grid gap-3 sm:grid-cols-3">
-      <SummaryItem label="검색 결과 입금 합계" value={formatCurrency(totalIncome)} />
-      <SummaryItem label="검색 결과 출금 합계" value={formatCurrency(totalExpense)} />
-      <SummaryItem label="검색 결과 차액" value={formatCurrency(balance)} />
+    <section aria-label="검색 결과 합계" className="grid gap-3 sm:grid-cols-3 lg:gap-4">
+      <SummaryCard label="입금 합계" value={formatCurrency(totalIncome)} tone="income" hint="검색 결과 기준" />
+      <SummaryCard label="출금 합계" value={formatCurrency(totalExpense)} tone="expense" hint="검색 결과 기준" />
+      <SummaryCard label="차액" value={formatCurrency(balance)} tone="balance" hint="입금 - 출금" />
     </section>
-  );
-}
-
-function SummaryItem({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm">
-      <p className="text-sm font-semibold text-zinc-500">{label}</p>
-      <p className="mt-2 text-2xl font-bold text-zinc-950">{value}</p>
-    </div>
   );
 }

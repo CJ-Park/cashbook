@@ -1,14 +1,19 @@
 import { logout } from "../actions/logout";
+import { SubmitButton } from "@/shared/components/ui/SubmitButton";
 
-export function LogoutButton() {
+type LogoutButtonProps = {
+  compact?: boolean;
+};
+
+export function LogoutButton({ compact = false }: LogoutButtonProps) {
   return (
-    <form action={logout}>
-      <button
-        type="submit"
-        className="min-h-12 rounded-md bg-zinc-900 px-5 text-base font-semibold text-white shadow-sm hover:bg-zinc-800"
+    <form action={logout} className={compact ? "shrink-0 lg:w-full" : undefined}>
+      <SubmitButton
+        pendingLabel="로그아웃 중..."
+        className={`button-secondary ${compact ? "w-full px-3 text-sm" : "px-5"}`}
       >
         로그아웃
-      </button>
+      </SubmitButton>
     </form>
   );
 }

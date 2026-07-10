@@ -1,4 +1,5 @@
 import { toggleCategoryActive } from "../actions/category-actions";
+import { SubmitButton } from "@/shared/components/ui/SubmitButton";
 
 type CategoryActiveToggleProps = {
   id: number;
@@ -8,17 +9,23 @@ type CategoryActiveToggleProps = {
 
 export function CategoryActiveToggle({ id, isActive, transactionCount }: CategoryActiveToggleProps) {
   return (
-    <form action={toggleCategoryActive}>
+    <form action={toggleCategoryActive} className="flex flex-col items-start gap-2 sm:items-end">
       <input type="hidden" name="id" value={id} />
       <input type="hidden" name="isActive" value={String(!isActive)} />
-      <button
-        type="submit"
-        className="min-h-10 rounded-md border border-zinc-300 px-4 text-sm font-bold text-zinc-900 hover:bg-zinc-100"
+      <SubmitButton
+        pendingLabel="변경 중..."
+        className={`${isActive ? "button-secondary" : "button-primary"} min-h-12 w-full sm:w-auto`}
       >
-        {isActive ? "사용 안 함" : "다시 사용"}
-      </button>
-      {transactionCount > 0 ? (
-        <p className="mt-2 text-xs text-zinc-500">거래 내역이 있어 비활성 처리합니다.</p>
+        {isActive ? "사용 중지" : "다시 사용"}
+      </SubmitButton>
+      {!isActive ? (
+        <p className="max-w-xs text-sm leading-6 text-[var(--text-soft)] sm:text-right">
+          새 내역의 선택 목록에는 표시되지 않습니다.
+        </p>
+      ) : transactionCount > 0 ? (
+        <p className="max-w-xs text-sm leading-6 text-[var(--text-soft)] sm:text-right">
+          거래 {transactionCount.toLocaleString("ko-KR")}건은 그대로 유지됩니다.
+        </p>
       ) : null}
     </form>
   );

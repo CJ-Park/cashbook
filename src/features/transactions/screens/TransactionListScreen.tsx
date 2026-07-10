@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Category } from "@/db/schema";
+import { AppShell } from "@/shared/components/layout/AppShell";
+import { PageHeader } from "@/shared/components/ui/PageHeader";
 import type { TransactionSearchCondition, TransactionSearchResult } from "../types";
 import { TransactionSearchForm } from "../components/TransactionSearchForm";
 import { TransactionSummary } from "../components/TransactionSummary";
@@ -12,23 +14,30 @@ type TransactionListScreenProps = {
 };
 
 export function TransactionListScreen({ categories, condition, result }: TransactionListScreenProps) {
-  return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-6 sm:px-6">
-      <section className="mx-auto flex w-full max-w-6xl flex-col gap-5">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-base font-semibold text-zinc-500">cashbook</p>
-            <h1 className="mt-1 text-3xl font-bold text-zinc-950">입출금 내역</h1>
-          </div>
-          <Link
-            href="/transactions/new"
-            className="flex min-h-12 items-center justify-center rounded-md bg-zinc-900 px-5 text-base font-bold text-white hover:bg-zinc-800"
-          >
-            입출금 등록
-          </Link>
-        </header>
+  const searchFormKey = [
+    condition.startDate ?? "",
+    condition.endDate ?? "",
+    condition.type ?? "",
+    condition.categoryId ?? "",
+    condition.keyword ?? "",
+  ].join("|");
 
-        <TransactionSearchForm categories={categories} condition={condition} />
+  return (
+    <AppShell activeSection="transactions">
+      <section className="flex w-full flex-col gap-6 lg:gap-7">
+        <PageHeader
+          eyebrow="TRANSACTIONS"
+          title="입출금 내역"
+          description={`현재 검색 조건에 맞는 내역 ${result.transactions.length.toLocaleString("ko-KR")}건입니다.`}
+          action={
+            <Link href="/transactions/new" className="button-primary w-full sm:w-auto">
+              <span aria-hidden="true" className="text-xl leading-none">+</span>
+              새 내역 등록
+            </Link>
+          }
+        />
+
+        <TransactionSearchForm key={searchFormKey} categories={categories} condition={condition} />
         <TransactionSummary
           totalIncome={result.totalIncome}
           totalExpense={result.totalExpense}
@@ -36,6 +45,6 @@ export function TransactionListScreen({ categories, condition, result }: Transac
         />
         <TransactionTable transactions={result.transactions} />
       </section>
-    </main>
+    </AppShell>
   );
 }
