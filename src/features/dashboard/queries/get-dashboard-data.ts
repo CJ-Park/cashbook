@@ -35,8 +35,8 @@ export async function getDashboardData(userId: string, now = new Date()): Promis
 
   const [summary] = await db
     .select({
-      totalIncome: sql<number>`coalesce(sum(case when ${transactions.type} = 'INCOME' then ${transactions.amount} else 0 end), 0)::int`,
-      totalExpense: sql<number>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)::int`,
+      totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'INCOME' then ${transactions.amount} else 0 end), 0)`,
+      totalExpense: sql<string>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)`,
     })
     .from(transactions)
     .where(

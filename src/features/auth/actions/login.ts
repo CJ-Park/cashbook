@@ -2,10 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-function getSafeNextPath(value: string) {
-  return value.startsWith("/") && !value.startsWith("//") ? value : "/dashboard";
-}
+import { getSafeNextPath } from "../utils/get-safe-next-path";
 
 function getLoginErrorPath(error: "missing" | "invalid", nextPath: string) {
   const params = new URLSearchParams({ error, next: nextPath });

@@ -38,9 +38,9 @@ export async function getCategoryReport(
     conditions.push(eq(transactions.type, condition.type));
   }
 
-  const totalAmount = sql<number>`coalesce(sum(${transactions.amount}), 0)::int`;
+  const totalAmount = sql<string>`coalesce(sum(${transactions.amount}), 0)`;
 
-  return db
+  const rows = await db
     .select({
       categoryId: categories.id,
       categoryName: categories.name,
@@ -52,4 +52,9 @@ export async function getCategoryReport(
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(categories.id)
     .orderBy(desc(totalAmount));
+
+  return rows.map((row) => ({
+    ...row,
+    totalAmount: Number(row.totalAmount),
+  }));
 }
