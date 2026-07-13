@@ -76,3 +76,14 @@
 - 이유: 금액을 숫자 셀로 유지하면서 Vercel 서버리스 환경에서 파일 시스템 없이 `.xlsx`를 생성할 수 있다.
 - 규칙: 거래 목록과 엑셀 다운로드는 동일한 검색 조건 파서와 DB 조회 함수를 사용한다.
 - 규칙: 파일명은 조회 기간에 따라 `cashbook_시작일_종료일.xlsx`, `cashbook_from_시작일.xlsx`, `cashbook_to_종료일.xlsx`, `cashbook_all.xlsx` 중 하나를 사용한다.
+
+## 2026-07-13 Vercel Production 배포 결정
+
+### CLI Production 배포와 직접 비밀번호 인증 유지
+
+- 결정: Vercel 프로젝트는 `joe-private/cashbook`, Production 주소는 `https://cashbook-iota-neon.vercel.app`을 사용한다.
+- 결정: Production에는 현재 런타임에 필요한 `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`만 등록한다.
+- 보안: 현재 사용되지 않는 `SUPABASE_SERVICE_ROLE_KEY`는 최소 권한 원칙에 따라 Production에 등록하지 않는다.
+- 인증: 현재 로그인은 `signInWithPassword`를 사용하며 `redirectTo`와 Auth callback route가 없으므로 MVP 로그인은 Supabase Redirect URL에 의존하지 않는다.
+- 향후: 이메일 인증, 비밀번호 재설정, OAuth를 추가할 때 Production Site URL과 Redirect Allow List를 함께 설정한다.
+- 운영: Vercel GitHub 앱의 저장소 접근 권한이 연결되지 않아 현재 Production 배포는 CLI로 수행한다. 자동 배포가 필요하면 GitHub 연동 권한을 별도로 설정한다.

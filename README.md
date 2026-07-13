@@ -75,9 +75,16 @@ npm run build
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `DATABASE_URL`
-- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` (현재 미사용, 관리자 권한 기능 추가 시에만 등록)
 
 서버 전용 키는 클라이언트에 노출하지 않습니다.
+
+## Production 배포
+
+- Vercel 프로젝트: `joe-private/cashbook`
+- Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
+- Production 필수 환경변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
+- 배포 및 검증 절차: [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 배포 방향
 
