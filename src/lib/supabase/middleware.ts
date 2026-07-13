@@ -16,7 +16,9 @@ function isProtectedPath(pathname: string) {
 
 function addAuthTiming(response: NextResponse, startedAt: number) {
   const duration = Math.max(0, performance.now() - startedAt);
-  response.headers.set("Server-Timing", `auth;dur=${duration.toFixed(1)}`);
+  const formattedDuration = duration.toFixed(1);
+  response.headers.set("Server-Timing", `auth;dur=${formattedDuration}`);
+  response.headers.set("X-Cashbook-Auth-Duration", `${formattedDuration}ms`);
   return response;
 }
 
