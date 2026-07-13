@@ -55,16 +55,27 @@ MVP에서는 핵심 장부 기능만 구현합니다.
 - 반복 지출 자동 등록
 - AI 자동 분류
 - 멀티 테넌트
+- 거래처명 상세 관리
+- 종합소득세 반영 여부 관리
+- soft delete
 
 ## 로컬 실행
 
 ```bash
 npm install
+npm run db:migrate
 npm run dev
 npm run lint
 npm run typecheck
 npm run build
 ```
+
+1. `.env.example`을 기준으로 `.env.local`을 준비합니다.
+2. `npm run db:migrate`로 Drizzle migration을 적용합니다.
+3. Supabase Authentication에서 이메일/비밀번호 사용자를 준비합니다.
+4. 로그인 사용자가 카테고리 또는 거래 화면을 처음 열면 사용자 전용 기본 카테고리가 자동 생성됩니다.
+
+수동 seed 명령은 사용하지 않습니다. 카테고리와 거래는 로그인 계정의 `user.id`로 분리됩니다.
 
 입출금 목록에서 현재 날짜, 구분, 카테고리, 검색어 조건을 유지한 채 엑셀 파일을 내려받을 수 있습니다. 엑셀은 서버 메모리에서 생성되며 로컬 디스크에 저장하지 않습니다.
 

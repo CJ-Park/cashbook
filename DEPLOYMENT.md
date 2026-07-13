@@ -5,7 +5,7 @@
 - Vercel 프로젝트: `joe-private/cashbook`
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
 - 최초 Production 배포 확인일: 2026-07-13
-- 배포 기준 브랜치와 커밋: `main` / `a94ebff`
+- 배포 기준 브랜치와 커밋: `main` / `61044e5`
 
 로컬 프로젝트는 `.vercel/project.json`으로 Vercel 프로젝트에 연결된다. `.vercel`과 `.env.local`은 Git에 포함하지 않는다.
 
@@ -46,10 +46,24 @@ npx vercel@latest deploy --prod --yes --scope joe-private
 
 - 로컬 `npm run lint`, `npm run typecheck`, `npm run build` 통과
 - Vercel 원격 `npm run build` 통과
+- Next.js `16.2.10`, Production 의존성 `npm audit --omit=dev` 취약점 0건
 - `/login`: 미인증 요청 `200 OK`
 - `/dashboard`, `/transactions`: 미인증 요청 `/login`으로 `307` 리디렉션
 - `/api/export`: 미인증 요청 `/login`으로 `307` 리디렉션
 - Production Supabase 스키마에서 `categories.user_id`, `transactions.user_id` UUID 확인
 - Production Supabase 스키마에서 `transactions.amount` bigint 확인
+- 임시 사용자 로그인과 빈 대시보드 확인
+- 사용자별 기본 카테고리 16개 자동 생성과 공통 카테고리 추가 확인
+- 입금·출금 등록, `저장 후 계속 입력`, 수정, 삭제 확인
+- 날짜·구분·카테고리·검색어 동시 필터와 목록·합계 조건 일치 확인
+- 대시보드, 월별 통계, 카테고리별 통계 합계 일치 확인
+- 동일 검색 조건이 포함된 Excel 다운로드 응답 확인
+- 다른 사용자 소유 거래 수정 URL이 `404`로 차단되는지 확인
+- 390×844 화면에서 가로 overflow 없음, 모바일 카드 목록과 48px 이상 주요 버튼 확인
+- E2E 임시 거래·카테고리·Auth 사용자를 모두 삭제하고 임시 자격정보 제거
 
-로그인 후 등록, 검색, 통계, 엑셀 다운로드 E2E는 Phase 10에서 점검한다.
+## 잔여 운영 항목
+
+- Vercel GitHub 앱 저장소 권한을 연결하기 전까지 Production은 CLI로 배포한다.
+- `categories.user_id`, `transactions.user_id`의 DB 수준 `NOT NULL`/Auth FK 강화는 기존 소유자 없는 카테고리 정리와 함께 별도 migration으로 진행한다.
+- Excel은 전체 검색 결과를 메모리에서 생성하므로 데이터가 수만 건 이상으로 커지면 건수 제한 또는 스트리밍 전략을 검토한다.

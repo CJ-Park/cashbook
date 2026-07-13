@@ -87,3 +87,15 @@
 - 인증: 현재 로그인은 `signInWithPassword`를 사용하며 `redirectTo`와 Auth callback route가 없으므로 MVP 로그인은 Supabase Redirect URL에 의존하지 않는다.
 - 향후: 이메일 인증, 비밀번호 재설정, OAuth를 추가할 때 Production Site URL과 Redirect Allow List를 함께 설정한다.
 - 운영: Vercel GitHub 앱의 저장소 접근 권한이 연결되지 않아 현재 Production 배포는 CLI로 수행한다. 자동 배포가 필요하면 GitHub 연동 권한을 별도로 설정한다.
+
+## 2026-07-13 MVP Review 결정
+
+### Production E2E와 보안 보완
+
+- 검증: 임시 Supabase Auth 사용자로 로그인, 카테고리, 입출금 CRUD, 검색·합계, 통계, Excel 다운로드, 모바일 화면을 Production에서 확인했다.
+- 정리: E2E 종료 후 임시 거래·카테고리·profile·Auth 사용자와 자격정보를 모두 삭제했다.
+- 보안: 로그인 `next` 경로는 백슬래시·외부 origin·제어 문자를 차단하고 내부 pathname만 허용한다.
+- 금액: 거래 목록뿐 아니라 대시보드·월별·카테고리 통계도 bigint 합계를 32비트 `int`로 변환하지 않는다.
+- 의존성: Next.js를 `16.2.10`으로 올리고 내부 PostCSS를 `8.5.18`로 override하여 Production audit 취약점 0건을 확인했다.
+- 데이터: 사용자 ID 없이 카테고리를 만들던 구형 `db:seed`를 제거하고 로그인 사용자별 자동 생성을 단일 경로로 사용한다.
+- 보류: DB 소유권 컬럼의 `NOT NULL`/Auth FK와 Excel 대량 결과 제한은 기존 데이터 정리와 사용량 증가 시 별도 작업으로 진행한다.

@@ -23,7 +23,7 @@
 - Supabase PostgreSQL
 - Supabase Auth
 - Drizzle ORM
-- `xlsx` 또는 엑셀 다운로드 가능한 적절한 라이브러리
+- SheetJS CE (`xlsx`)
 - Vercel
 
 ## MVP 기능 범위
@@ -142,7 +142,9 @@ src/
 
 ## DB 설계
 
-Supabase Auth를 사용할 예정이므로 기본 사용자는 `auth.users`를 사용한다. 추가 프로필이 필요하면 `profiles` 테이블을 사용한다.
+Supabase Auth의 `auth.users`를 기본 사용자로 사용한다. 추가 프로필이 필요하면 `profiles` 테이블을 사용한다. `categories.user_id`와 `transactions.user_id`는 로그인 사용자 소유권을 나타내며, 모든 앱 쿼리는 현재 `user.id` 조건을 강제한다.
+
+현재 두 `user_id` 컬럼은 기존 데이터 마이그레이션 호환을 위해 nullable UUID로 유지한다. 애플리케이션은 신규 데이터에 항상 사용자 ID를 기록하며, 추후 기존 소유자 없는 데이터를 정리한 뒤 DB의 `NOT NULL`/Auth FK 제약을 강화한다.
 
 ### profiles
 
@@ -159,6 +161,7 @@ create table profiles (
 ```sql
 create table categories (
   id bigserial primary key,
+  user_id uuid,
   name text not null,
   type text not null check (type in ('INCOME', 'EXPENSE', 'COMMON')),
   sort_order integer not null default 0,
@@ -172,6 +175,7 @@ create table categories (
 ```sql
 create table transactions (
   id bigserial primary key,
+  user_id uuid,
   transaction_date date not null,
   type text not null check (type in ('INCOME', 'EXPENSE')),
   category_id bigint not null references categories(id),
@@ -185,6 +189,8 @@ create table transactions (
 ```
 
 ## 기본 카테고리 예시
+
+기본 카테고리는 로그인 사용자가 카테고리 또는 거래 화면을 처음 조회할 때 해당 `user_id` 기준으로 자동 생성한다. `(user_id, name, type)` unique index로 반복 실행을 안전하게 처리한다.
 
 입금 카테고리:
 
@@ -211,6 +217,15 @@ create table transactions (
 ## 인덱스 설계
 
 ```sql
+create unique index idx_categories_user_name_type_unique
+on categories (user_id, name, type);
+
+create index idx_categories_user_active
+on categories (user_id, is_active);
+
+create index idx_transactions_user_date
+on transactions (user_id, transaction_date);
+
 create index idx_transactions_date
 on transactions (transaction_date);
 
@@ -360,6 +375,9 @@ on transactions (transaction_date desc, id desc);
 파일명 예시:
 
 ```text
+cashbook_all.xlsx
+cashbook_from_2026-01-01.xlsx
+cashbook_to_2026-12-31.xlsx
 cashbook_2026-01-01_2026-12-31.xlsx
 ```
 
@@ -444,7 +462,8 @@ type TransactionSearchResult = {
 - 인증되지 않은 사용자는 로그인 화면으로 redirect
 - 모든 장부 페이지는 로그인 필요
 - 초기에는 사용자 1~2명만 쓰는 구조로 단순하게 구현
-- 추후 `user_id` 컬럼을 `transactions`, `categories`에 추가하여 사용자별 데이터 분리 가능하도록 고려
+- `transactions.user_id`, `categories.user_id`와 모든 CRUD/조회 조건으로 로그인 사용자별 데이터를 분리
+- DB 수준 `NOT NULL`/Auth FK/RLS 정책 강화는 기존 소유자 없는 데이터 정리 후 별도 migration으로 진행
 
 ## 비용 절감 배포 기준
 
