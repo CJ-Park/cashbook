@@ -1,6 +1,6 @@
 import { and, asc, count, eq, or } from "drizzle-orm";
 import { db } from "@/db/client";
-import { categories, transactions } from "@/db/schema";
+import { categories, profiles, transactions } from "@/db/schema";
 
 const defaultCategories: Array<{
   name: string;
@@ -25,18 +25,39 @@ const defaultCategories: Array<{
   { name: "기타출금", type: "EXPENSE", sortOrder: 110 },
 ];
 
-export async function ensureDefaultCategoriesForUser(userId: string) {
-  await db
-    .insert(categories)
-    .values(defaultCategories.map((category) => ({ ...category, userId })))
-    .onConflictDoNothing({
-      target: [categories.userId, categories.name, categories.type],
-    });
+export async function ensureDefaultCategoriesForUser(
+  userId: string,
+  profileName = "사용자",
+) {
+  return db.transaction(async (tx) => {
+    const [createdProfile] = await tx
+      .insert(profiles)
+      .values({ id: userId, name: profileName })
+      .onConflictDoNothing({ target: profiles.id })
+      .returning({ id: profiles.id });
+
+    const [existingCategory] = await tx
+      .select({ id: categories.id })
+      .from(categories)
+      .where(eq(categories.userId, userId))
+      .limit(1);
+
+    if (!createdProfile && existingCategory) {
+      return false;
+    }
+
+    await tx
+      .insert(categories)
+      .values(defaultCategories.map((category) => ({ ...category, userId })))
+      .onConflictDoNothing({
+        target: [categories.userId, categories.name, categories.type],
+      });
+
+    return true;
+  });
 }
 
 export async function getCategories(userId: string) {
-  await ensureDefaultCategoriesForUser(userId);
-
   return db
     .select()
     .from(categories)
@@ -45,8 +66,6 @@ export async function getCategories(userId: string) {
 }
 
 export async function getCategoriesWithTransactionCount(userId: string) {
-  await ensureDefaultCategoriesForUser(userId);
-
   return db
     .select({
       id: categories.id,
@@ -67,8 +86,6 @@ export async function getCategoriesWithTransactionCount(userId: string) {
 }
 
 export async function getActiveCategories(userId: string) {
-  await ensureDefaultCategoriesForUser(userId);
-
   return db
     .select()
     .from(categories)
@@ -80,8 +97,6 @@ export async function getActiveCategoriesForTransactionType(
   userId: string,
   type: "INCOME" | "EXPENSE",
 ) {
-  await ensureDefaultCategoriesForUser(userId);
-
   return db
     .select()
     .from(categories)

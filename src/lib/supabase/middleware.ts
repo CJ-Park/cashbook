@@ -14,7 +14,27 @@ function isProtectedPath(pathname: string) {
   );
 }
 
+function addAuthTiming(response: NextResponse, startedAt: number) {
+  const duration = Math.max(0, performance.now() - startedAt);
+  response.headers.set("Server-Timing", `auth;dur=${duration.toFixed(1)}`);
+  return response;
+}
+
+function redirectWithSessionCookies(
+  redirectUrl: URL,
+  sessionResponse: NextResponse,
+) {
+  const redirectResponse = NextResponse.redirect(redirectUrl);
+
+  sessionResponse.cookies.getAll().forEach((cookie) => {
+    redirectResponse.cookies.set(cookie);
+  });
+
+  return redirectResponse;
+}
+
 export async function updateSession(request: NextRequest) {
+  const authStartedAt = performance.now();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -40,31 +60,36 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { data, error } = await supabase.auth.getClaims();
+  const userId =
+    !error && typeof data?.claims.sub === "string" && data.claims.sub.length > 0
+      ? data.claims.sub
+      : null;
 
   const { pathname } = request.nextUrl;
 
   if (pathname === "/") {
     const redirectUrl = request.nextUrl.clone();
-    redirectUrl.pathname = user ? "/dashboard" : "/login";
-    return NextResponse.redirect(redirectUrl);
+    redirectUrl.pathname = userId ? "/dashboard" : "/login";
+    const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
+    return addAuthTiming(redirectResponse, authStartedAt);
   }
 
-  if (pathname === "/login" && user) {
+  if (pathname === "/login" && userId) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/dashboard";
     redirectUrl.search = "";
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
+    return addAuthTiming(redirectResponse, authStartedAt);
   }
 
-  if (isProtectedPath(pathname) && !user) {
+  if (isProtectedPath(pathname) && !userId) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("next", pathname);
-    return NextResponse.redirect(redirectUrl);
+    const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
+    return addAuthTiming(redirectResponse, authStartedAt);
   }
 
-  return response;
+  return addAuthTiming(response, authStartedAt);
 }

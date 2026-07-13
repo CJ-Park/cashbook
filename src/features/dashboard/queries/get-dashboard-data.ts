@@ -33,34 +33,69 @@ function getMonthRange(now: Date) {
 export async function getDashboardData(userId: string, now = new Date()): Promise<DashboardData> {
   const { startDate, endDate } = getMonthRange(now);
 
-  const [summary] = await db
-    .select({
-      totalIncome: sql<string>`coalesce(sum(case when ${transactions.type} = 'INCOME' then ${transactions.amount} else 0 end), 0)`,
-      totalExpense: sql<string>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)`,
-    })
-    .from(transactions)
-    .where(
-      and(
-        eq(transactions.userId, userId),
-        gte(transactions.transactionDate, startDate),
-        lt(transactions.transactionDate, endDate),
+  const monthlySummary = db.$with("monthly_summary").as(
+    db
+      .select({
+        totalIncome:
+          sql<string>`coalesce(sum(case when ${transactions.type} = 'INCOME' then ${transactions.amount} else 0 end), 0)`.as(
+            "total_income",
+          ),
+        totalExpense:
+          sql<string>`coalesce(sum(case when ${transactions.type} = 'EXPENSE' then ${transactions.amount} else 0 end), 0)`.as(
+            "total_expense",
+          ),
+      })
+      .from(transactions)
+      .where(
+        and(
+          eq(transactions.userId, userId),
+          gte(transactions.transactionDate, startDate),
+          lt(transactions.transactionDate, endDate),
+        ),
       ),
-    );
+  );
 
-  const recentTransactions = await db
+  const recent = db.$with("recent_transactions").as(
+    db
+      .select({
+        id: transactions.id,
+        transactionDate: transactions.transactionDate,
+        type: transactions.type,
+        categoryName: categories.name,
+        title: transactions.title,
+        amount: transactions.amount,
+      })
+      .from(transactions)
+      .innerJoin(categories, eq(transactions.categoryId, categories.id))
+      .where(eq(transactions.userId, userId))
+      .orderBy(desc(transactions.transactionDate), desc(transactions.id))
+      .limit(10),
+  );
+
+  const rows = await db
+    .with(monthlySummary, recent)
     .select({
-      id: transactions.id,
-      transactionDate: transactions.transactionDate,
-      type: transactions.type,
-      categoryName: categories.name,
-      title: transactions.title,
-      amount: transactions.amount,
+      summary: {
+        totalIncome: monthlySummary.totalIncome,
+        totalExpense: monthlySummary.totalExpense,
+      },
+      transaction: {
+        id: recent.id,
+        transactionDate: recent.transactionDate,
+        type: recent.type,
+        categoryName: recent.categoryName,
+        title: recent.title,
+        amount: recent.amount,
+      },
     })
-    .from(transactions)
-    .innerJoin(categories, eq(transactions.categoryId, categories.id))
-    .where(eq(transactions.userId, userId))
-    .orderBy(desc(transactions.transactionDate), desc(transactions.id))
-    .limit(10);
+    .from(monthlySummary)
+    .leftJoin(recent, sql`true`)
+    .orderBy(desc(recent.transactionDate), desc(recent.id));
+
+  const summary = rows[0]?.summary;
+  const recentTransactions = rows.flatMap(({ transaction }) =>
+    transaction ? [transaction] : [],
+  );
 
   const totalIncome = Number(summary?.totalIncome ?? 0);
   const totalExpense = Number(summary?.totalExpense ?? 0);

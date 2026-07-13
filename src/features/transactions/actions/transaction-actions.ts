@@ -5,7 +5,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
-import { requireUser } from "@/features/auth/queries/require-user";
+import { requireFreshUser } from "@/features/auth/queries/require-fresh-user";
 import type { TransactionType } from "../types";
 
 function getRequiredString(formData: FormData, key: string) {
@@ -67,7 +67,7 @@ async function assertUserCategory(userId: string, categoryId: number) {
 }
 
 export async function createTransaction(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const values = parseTransactionForm(formData);
   const intent = getRequiredString(formData, "intent");
@@ -87,7 +87,7 @@ export async function createTransaction(formData: FormData) {
 }
 
 export async function updateTransaction(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const id = Number(getRequiredString(formData, "id"));
 
@@ -111,7 +111,7 @@ export async function updateTransaction(formData: FormData) {
 }
 
 export async function deleteTransaction(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const id = Number(getRequiredString(formData, "id"));
 

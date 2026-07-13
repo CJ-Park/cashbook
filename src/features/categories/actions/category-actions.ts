@@ -4,7 +4,7 @@ import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db/client";
 import { categories } from "@/db/schema";
-import { requireUser } from "@/features/auth/queries/require-user";
+import { requireFreshUser } from "@/features/auth/queries/require-fresh-user";
 import type { CategoryType } from "../types";
 
 function getString(formData: FormData, key: string) {
@@ -30,7 +30,7 @@ function parseSortOrder(value: string) {
 }
 
 export async function createCategory(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const name = getString(formData, "name");
 
@@ -50,7 +50,7 @@ export async function createCategory(formData: FormData) {
 }
 
 export async function updateCategory(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const id = Number(getString(formData, "id"));
   const name = getString(formData, "name");
@@ -73,7 +73,7 @@ export async function updateCategory(formData: FormData) {
 }
 
 export async function toggleCategoryActive(formData: FormData) {
-  const user = await requireUser();
+  const user = await requireFreshUser();
 
   const id = Number(getString(formData, "id"));
   const isActive = getString(formData, "isActive") === "true";

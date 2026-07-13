@@ -11,6 +11,12 @@
 
 Vercel GitHub 앱의 저장소 접근 권한은 아직 연결되지 않았다. 자동 배포를 설정하기 전까지는 아래 CLI 명령으로 Production을 배포한다.
 
+## Function Region
+
+Production 함수는 `vercel.json`의 `regions: ["icn1"]` 설정으로 서울 리전에 고정한다. Supabase PostgreSQL도 `ap-northeast-2`에 있으므로 서버 함수와 데이터 소스의 장거리 왕복을 피한다.
+
+배포 후 응답의 `X-Vercel-Id`에 함수 실행 리전이 `icn1`로 표시되는지 확인한다. Proxy 인증 시간은 `Server-Timing: auth;dur=...` 응답 헤더로 확인할 수 있다.
+
 ## Production 환경변수
 
 필수 변수:
@@ -61,6 +67,16 @@ npx vercel@latest deploy --prod --yes --scope joe-private
 - 다른 사용자 소유 거래 수정 URL이 `404`로 차단되는지 확인
 - 390×844 화면에서 가로 overflow 없음, 모바일 카드 목록과 48px 이상 주요 버튼 확인
 - E2E 임시 거래·카테고리·Auth 사용자를 모두 삭제하고 임시 자격정보 제거
+
+## 2026-07-13 성능 개선 검증
+
+- Vercel Function Region을 Supabase와 같은 서울 `icn1`로 고정
+- Supabase ES256 JWT를 `getClaims()`로 검증하고, 캐시 후 로컬 검증이 동작하는지 확인
+- 등록·수정·삭제 Server Action은 원격 `getUser()` 검증을 유지
+- 기본 카테고리는 신규 `profiles` 행이 처음 생성될 때 한 번만 프로비저닝
+- 대시보드 합계·최근 내역을 단일 SQL 요청으로 통합
+- 거래 목록·검색 결과 합계를 단일 SQL 요청으로 통합
+- 빈 거래 결과에서 목록 0건, 입금·출금 합계 0원을 운영 DB 읽기 쿼리로 확인
 
 ## 잔여 운영 항목
 

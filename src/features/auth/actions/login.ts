@@ -1,6 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { ensureDefaultCategoriesForUser } from "@/features/categories/queries/get-categories";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getSafeNextPath } from "../utils/get-safe-next-path";
 
@@ -19,7 +20,7 @@ export async function login(formData: FormData) {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email,
     password,
   });
@@ -27,6 +28,13 @@ export async function login(formData: FormData) {
   if (error) {
     redirect(getLoginErrorPath("invalid", nextPath));
   }
+
+  const profileName =
+    typeof data.user.user_metadata.name === "string" && data.user.user_metadata.name.trim()
+      ? data.user.user_metadata.name.trim()
+      : (data.user.email ?? "사용자");
+
+  await ensureDefaultCategoriesForUser(data.user.id, profileName);
 
   redirect(nextPath);
 }
