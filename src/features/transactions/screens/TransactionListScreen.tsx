@@ -6,6 +6,7 @@ import type { TransactionSearchCondition, TransactionSearchResult } from "../typ
 import { TransactionSearchForm } from "../components/TransactionSearchForm";
 import { TransactionSummary } from "../components/TransactionSummary";
 import { TransactionTable } from "../components/TransactionTable";
+import { createTransactionSearchParams } from "../queries/search-conditions";
 
 type TransactionListScreenProps = {
   categories: Category[];
@@ -21,6 +22,8 @@ export function TransactionListScreen({ categories, condition, result }: Transac
     condition.categoryId ?? "",
     condition.keyword ?? "",
   ].join("|");
+  const exportSearchParams = createTransactionSearchParams(condition).toString();
+  const exportHref = `/api/export${exportSearchParams ? `?${exportSearchParams}` : ""}`;
 
   return (
     <AppShell activeSection="transactions">
@@ -30,10 +33,16 @@ export function TransactionListScreen({ categories, condition, result }: Transac
           title="입출금 내역"
           description={`현재 검색 조건에 맞는 내역 ${result.transactions.length.toLocaleString("ko-KR")}건입니다.`}
           action={
-            <Link href="/transactions/new" className="button-primary w-full sm:w-auto">
-              <span aria-hidden="true" className="text-xl leading-none">+</span>
-              새 내역 등록
-            </Link>
+            <>
+              <a href={exportHref} className="button-secondary w-full sm:w-auto">
+                <span aria-hidden="true" className="text-lg leading-none">↓</span>
+                엑셀 다운로드
+              </a>
+              <Link href="/transactions/new" className="button-primary w-full sm:w-auto">
+                <span aria-hidden="true" className="text-xl leading-none">+</span>
+                새 내역 등록
+              </Link>
+            </>
           }
         />
 

@@ -67,3 +67,12 @@
 - `chore/vercel-deploy`
 - `fix/login-redirect`
 - `fix/export-filter-condition`
+
+## 2026-07-10 Excel Export 구현 결정
+
+### SheetJS CE와 기존 거래 검색 조건 재사용
+
+- 결정: 엑셀 생성은 SheetJS CE `xlsx` 0.20.3을 사용하고 `src/app/api/export/route.ts`에서 메모리 버퍼로 응답한다.
+- 이유: 금액을 숫자 셀로 유지하면서 Vercel 서버리스 환경에서 파일 시스템 없이 `.xlsx`를 생성할 수 있다.
+- 규칙: 거래 목록과 엑셀 다운로드는 동일한 검색 조건 파서와 DB 조회 함수를 사용한다.
+- 규칙: 파일명은 조회 기간에 따라 `cashbook_시작일_종료일.xlsx`, `cashbook_from_시작일.xlsx`, `cashbook_to_종료일.xlsx`, `cashbook_all.xlsx` 중 하나를 사용한다.

@@ -18,6 +18,7 @@ export type TransactionRow = {
   amount: number;
   memo: string | null;
   paymentMethod: string | null;
+  createdAt: Date;
 };
 
 export type TransactionSearchResult = {

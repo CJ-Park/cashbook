@@ -2,10 +2,32 @@ import { and, eq, gte, ilike, lte, or, type SQL } from "drizzle-orm";
 import { transactions } from "@/db/schema";
 import type { TransactionSearchCondition } from "../types";
 
+export function isValidTransactionSearchDate(value: string) {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+    return false;
+  }
+
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+}
+
+function parseDate(value?: string) {
+  if (!value || !isValidTransactionSearchDate(value)) {
+    return undefined;
+  }
+
+  return value;
+}
+
 export function parseTransactionSearchParams(
-  searchParams: Record<string, string | string[] | undefined>,
+  searchParams: Record<string, string | string[] | undefined> | URLSearchParams,
 ): TransactionSearchCondition {
   const getValue = (key: string) => {
+    if (searchParams instanceof URLSearchParams) {
+      return searchParams.get(key) ?? undefined;
+    }
+
     const value = searchParams[key];
     return Array.isArray(value) ? value[0] : value;
   };
@@ -14,12 +36,38 @@ export function parseTransactionSearchParams(
   const categoryId = Number(getValue("categoryId"));
 
   return {
-    startDate: getValue("startDate") || undefined,
-    endDate: getValue("endDate") || undefined,
+    startDate: parseDate(getValue("startDate")),
+    endDate: parseDate(getValue("endDate")),
     type: type === "INCOME" || type === "EXPENSE" ? type : undefined,
     categoryId: Number.isFinite(categoryId) && categoryId > 0 ? categoryId : undefined,
     keyword: getValue("keyword")?.trim() || undefined,
   };
+}
+
+export function createTransactionSearchParams(condition: TransactionSearchCondition) {
+  const searchParams = new URLSearchParams();
+
+  if (condition.startDate) {
+    searchParams.set("startDate", condition.startDate);
+  }
+
+  if (condition.endDate) {
+    searchParams.set("endDate", condition.endDate);
+  }
+
+  if (condition.type) {
+    searchParams.set("type", condition.type);
+  }
+
+  if (condition.categoryId) {
+    searchParams.set("categoryId", String(condition.categoryId));
+  }
+
+  if (condition.keyword) {
+    searchParams.set("keyword", condition.keyword);
+  }
+
+  return searchParams;
 }
 
 export function buildTransactionConditions(userId: string, condition: TransactionSearchCondition) {
