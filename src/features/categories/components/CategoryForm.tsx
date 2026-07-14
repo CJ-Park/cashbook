@@ -11,9 +11,10 @@ import { SubmitButton } from "@/shared/components/ui/SubmitButton";
 
 type CategoryFormProps = {
   category?: CategoryRow;
+  stackedOnDesktop?: boolean;
 };
 
-export function CategoryForm({ category }: CategoryFormProps) {
+export function CategoryForm({ category, stackedOnDesktop = false }: CategoryFormProps) {
   const action = category ? updateCategory : createCategory;
   const isTypeLocked = Boolean(category && category.transactionCount > 0);
   const formRef = useRef<HTMLFormElement>(null);
@@ -36,7 +37,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
         category
           ? "md:grid-cols-[minmax(0,1fr)_10rem_9rem_auto] md:items-end"
           : "md:grid-cols-[minmax(0,1fr)_12rem_auto] md:items-end"
-      }`}
+      } ${stackedOnDesktop ? "xl:grid-cols-1 xl:items-stretch" : ""}`}
     >
       {category ? <input type="hidden" name="id" value={category.id} /> : null}
       {!category ? <input type="hidden" name="sortOrder" value="0" /> : null}
@@ -94,7 +95,7 @@ export function CategoryForm({ category }: CategoryFormProps) {
 
       <SubmitButton
         pendingLabel={category ? "저장 중..." : "추가 중..."}
-        className="button-primary min-h-13 w-full md:w-auto"
+        className={`button-primary min-h-13 w-full md:w-auto ${stackedOnDesktop ? "xl:w-full" : ""}`}
       >
         {category ? "변경 저장" : "카테고리 추가"}
       </SubmitButton>

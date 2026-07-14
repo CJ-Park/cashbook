@@ -174,7 +174,10 @@ export function CategoryScreen({ categories }: CategoryScreenProps) {
                               <p className="mb-4 text-sm leading-6 text-[var(--text-soft)]">
                                 표시 순서는 숫자가 작을수록 선택 목록의 앞쪽에 나타납니다.
                               </p>
-                              <CategoryForm category={category} />
+                              <CategoryForm
+                                category={category}
+                                stackedOnDesktop={group.type !== "COMMON"}
+                              />
                             </div>
                           </details>
                         </article>
