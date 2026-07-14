@@ -14,14 +14,6 @@ function isProtectedPath(pathname: string) {
   );
 }
 
-function addAuthTiming(response: NextResponse, startedAt: number) {
-  const duration = Math.max(0, performance.now() - startedAt);
-  const formattedDuration = duration.toFixed(1);
-  response.headers.set("Server-Timing", `auth;dur=${formattedDuration}`);
-  response.headers.set("X-Cashbook-Auth-Duration", `${formattedDuration}ms`);
-  return response;
-}
-
 function redirectWithSessionCookies(
   redirectUrl: URL,
   sessionResponse: NextResponse,
@@ -36,7 +28,6 @@ function redirectWithSessionCookies(
 }
 
 export async function updateSession(request: NextRequest) {
-  const authStartedAt = performance.now();
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -74,7 +65,7 @@ export async function updateSession(request: NextRequest) {
     const redirectUrl = request.nextUrl.clone();
     redirectUrl.pathname = userId ? "/dashboard" : "/login";
     const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
-    return addAuthTiming(redirectResponse, authStartedAt);
+    return redirectResponse;
   }
 
   if (pathname === "/login" && userId) {
@@ -82,7 +73,7 @@ export async function updateSession(request: NextRequest) {
     redirectUrl.pathname = "/dashboard";
     redirectUrl.search = "";
     const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
-    return addAuthTiming(redirectResponse, authStartedAt);
+    return redirectResponse;
   }
 
   if (isProtectedPath(pathname) && !userId) {
@@ -90,8 +81,8 @@ export async function updateSession(request: NextRequest) {
     redirectUrl.pathname = "/login";
     redirectUrl.searchParams.set("next", pathname);
     const redirectResponse = redirectWithSessionCookies(redirectUrl, response);
-    return addAuthTiming(redirectResponse, authStartedAt);
+    return redirectResponse;
   }
 
-  return addAuthTiming(response, authStartedAt);
+  return response;
 }

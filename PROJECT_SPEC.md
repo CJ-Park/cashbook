@@ -144,8 +144,6 @@ src/
 
 Supabase Auth의 `auth.users`를 기본 사용자로 사용한다. 추가 프로필이 필요하면 `profiles` 테이블을 사용한다. `categories.user_id`와 `transactions.user_id`는 로그인 사용자 소유권을 나타내며, 모든 앱 쿼리는 현재 `user.id` 조건을 강제한다.
 
-현재 두 `user_id` 컬럼은 기존 데이터 마이그레이션 호환을 위해 nullable UUID로 유지한다. 애플리케이션은 신규 데이터에 항상 사용자 ID를 기록하며, 추후 기존 소유자 없는 데이터를 정리한 뒤 DB의 `NOT NULL`/Auth FK 제약을 강화한다.
-
 ### profiles
 
 ```sql
@@ -463,7 +461,6 @@ type TransactionSearchResult = {
 - 모든 장부 페이지는 로그인 필요
 - 초기에는 사용자 1~2명만 쓰는 구조로 단순하게 구현
 - `transactions.user_id`, `categories.user_id`와 모든 CRUD/조회 조건으로 로그인 사용자별 데이터를 분리
-- DB 수준 `NOT NULL`/Auth FK/RLS 정책 강화는 기존 소유자 없는 데이터 정리 후 별도 migration으로 진행
 
 ## 비용 절감 배포 기준
 
