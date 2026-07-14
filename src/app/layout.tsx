@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  applicationName: "살림장부",
   title: {
     default: "살림장부",
     template: "%s | 살림장부",
@@ -12,6 +13,7 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   colorScheme: "light",
   themeColor: "#f4f7f9",
+  viewportFit: "cover",
 };
 
 export default function RootLayout({

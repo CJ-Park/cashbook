@@ -17,7 +17,7 @@ export function LoginScreen({ error, nextPath = "/dashboard" }: LoginScreenProps
     : undefined;
 
   return (
-    <main className="relative flex min-h-screen items-center overflow-hidden px-4 py-8 sm:px-6 sm:py-12">
+    <main className="relative flex min-h-screen items-center overflow-hidden pt-[max(2rem,env(safe-area-inset-top))] pr-[max(1rem,env(safe-area-inset-right))] pb-[max(2rem,env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] sm:pt-[max(3rem,env(safe-area-inset-top))] sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pb-[max(3rem,env(safe-area-inset-bottom))] sm:pl-[max(1.5rem,env(safe-area-inset-left))]">
       <div
         aria-hidden="true"
         className="absolute -top-32 -right-32 size-80 rounded-full bg-[var(--primary-soft)] blur-3xl sm:size-[28rem]"

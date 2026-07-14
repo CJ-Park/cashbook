@@ -33,6 +33,7 @@
 - 월별 통계
 - 카테고리별 통계
 - 엑셀 다운로드
+- PWA 앱 설치 지원
 
 ## MVP 범위
 
@@ -96,6 +97,16 @@ npm run build
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
 - Production 필수 환경변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
 - 배포 및 검증 절차: [DEPLOYMENT.md](./DEPLOYMENT.md)
+
+## 앱 설치
+
+Production 웹페이지는 PWA 방식으로 휴대폰과 데스크톱에 설치할 수 있습니다.
+
+- Android Chrome·데스크톱 Chrome/Edge: 브라우저의 `앱 설치` 메뉴 사용
+- iPhone/iPad: 브라우저의 `공유` → `홈 화면에 추가` 사용
+- 설치 후 `살림장부` 아이콘을 누르면 독립 앱 화면으로 실행
+
+현재 PWA는 온라인 전용입니다. 거래 내역과 금액이 기기의 PWA 캐시에 남지 않도록 서비스 워커와 오프라인 장부 기능은 사용하지 않습니다. 자세한 설계는 [PWA_DESIGN.md](./PWA_DESIGN.md)를 참고합니다.
 
 ## 배포 방향
 

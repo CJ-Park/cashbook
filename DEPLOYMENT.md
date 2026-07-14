@@ -5,7 +5,7 @@
 - Vercel 프로젝트: `joe-private/cashbook`
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
 - 최초 Production 배포 확인일: 2026-07-13
-- 배포 기준 브랜치와 커밋: `main` / `61044e5`
+- 배포 기준 브랜치: `main`
 
 로컬 프로젝트는 `.vercel/project.json`으로 Vercel 프로젝트에 연결된다. `.vercel`과 `.env.local`은 Git에 포함하지 않는다.
 
@@ -37,6 +37,21 @@ npm run typecheck
 npm run build
 npx vercel@latest deploy --prod --yes --scope joe-private
 ```
+
+## PWA 배포 검증
+
+PWA는 서비스 워커 없이 Manifest와 HTTPS를 사용하는 온라인 설치 방식이다. 배포 후 다음을 확인한다.
+
+- `/manifest.webmanifest`: `200`, `application/manifest+json`
+- `/icons/cashbook-192.png`, `/icons/cashbook-512.png`, `/icons/cashbook-maskable-512.png`: `200`, `image/png`
+- `/apple-icon.png`: `200`, `image/png`
+- Manifest 요청에 `X-Cashbook-Auth-Duration`이 없어 인증 Proxy를 우회함
+- Manifest의 `id: "/"`, `start_url: "/dashboard"`, `scope: "/"`, `display: "standalone"`
+- 미인증 `/dashboard` 요청이 `/login?next=/dashboard`로 이동
+- Chrome DevTools Application에서 Manifest 오류가 없음
+- Android Chrome과 iPhone/iPad에서 홈 화면 설치 후 아이콘·이름·standalone 실행 확인
+- 세로·가로 화면에서 노치와 홈 인디케이터가 UI를 가리지 않음
+- 오프라인에서 과거 장부 데이터가 별도 PWA 캐시로 표시되지 않음
 
 ## Supabase Auth URL
 

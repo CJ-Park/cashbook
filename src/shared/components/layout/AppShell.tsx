@@ -75,14 +75,14 @@ export function AppShell({ activeSection, children }: AppShellProps) {
       </aside>
 
       <div className="lg:pl-[16.5rem]">
-        <header className="sticky top-0 z-20 flex min-h-16 items-center justify-between border-b border-[var(--border)] bg-white/92 px-4 backdrop-blur-lg lg:hidden">
+        <header className="sticky top-0 z-20 flex min-h-[calc(4rem+env(safe-area-inset-top))] items-center justify-between border-b border-[var(--border)] bg-white/92 pt-[env(safe-area-inset-top)] pr-[max(1rem,env(safe-area-inset-right))] pl-[max(1rem,env(safe-area-inset-left))] backdrop-blur-lg lg:hidden">
           <Brand compact />
           <LogoutButton compact />
         </header>
 
         <main
           id="main-content"
-          className="mx-auto w-full max-w-[92rem] px-4 pb-[calc(7rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pt-8 lg:px-10 lg:pb-12 lg:pt-10 xl:px-12"
+          className="mx-auto w-full max-w-[92rem] pt-6 pr-[max(1rem,env(safe-area-inset-right))] pb-[calc(7rem+env(safe-area-inset-bottom))] pl-[max(1rem,env(safe-area-inset-left))] sm:pt-8 sm:pr-[max(1.5rem,env(safe-area-inset-right))] sm:pl-[max(1.5rem,env(safe-area-inset-left))] lg:px-10 lg:pb-12 lg:pt-10 xl:px-12"
         >
           {children}
         </main>
@@ -90,7 +90,7 @@ export function AppShell({ activeSection, children }: AppShellProps) {
 
       <nav
         aria-label="모바일 주요 메뉴"
-        className="fixed inset-x-3 bottom-3 z-40 grid grid-cols-5 rounded-[1.35rem] border border-[var(--border)] bg-white/96 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-md)] backdrop-blur-lg lg:hidden"
+        className="fixed right-[max(0.75rem,env(safe-area-inset-right))] bottom-3 left-[max(0.75rem,env(safe-area-inset-left))] z-40 grid grid-cols-5 rounded-[1.35rem] border border-[var(--border)] bg-white/96 p-1.5 pb-[max(0.375rem,env(safe-area-inset-bottom))] shadow-[var(--shadow-md)] backdrop-blur-lg lg:hidden"
       >
         {navigation.map((item) => {
           const isActive = item.id === activeSection;
