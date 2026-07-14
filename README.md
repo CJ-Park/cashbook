@@ -99,6 +99,7 @@ npm run build
 
 - Vercel 프로젝트: `joe-private/cashbook`
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
+- Git 배포: 작업 브랜치 push는 Preview, `main` push는 Production 자동 배포
 - 다음 Production 배포 필수 환경변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`, `SUPABASE_DB_CA_CERT`
 - 배포 및 검증 절차: [DEPLOYMENT.md](./DEPLOYMENT.md)
 

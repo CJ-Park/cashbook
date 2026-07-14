@@ -87,7 +87,7 @@
 - 보안: 현재 사용되지 않는 `SUPABASE_SERVICE_ROLE_KEY`는 최소 권한 원칙에 따라 Production에 등록하지 않는다.
 - 인증: 현재 로그인은 `signInWithPassword`를 사용하며 `redirectTo`와 Auth callback route가 없으므로 MVP 로그인은 Supabase Redirect URL에 의존하지 않는다.
 - 향후: 이메일 인증, 비밀번호 재설정, OAuth를 추가할 때 Production Site URL과 Redirect Allow List를 함께 설정한다.
-- 운영: Vercel GitHub 앱의 private 저장소 접근 권한 부족으로 Git 연결이 실패해, CLI로 Production 후보 배포 → 인증 E2E → promote 순서를 유지한다.
+- 운영: Vercel GitHub 앱에 `CJ-Park/cashbook` private 저장소 권한을 부여해 작업 브랜치는 Preview, `main`은 Production으로 자동 배포한다. 고위험 변경에는 CLI 후보 배포 → 인증 E2E → promote 절차를 병행한다.
 
 ## 2026-07-13 MVP Review 결정
 
@@ -141,4 +141,4 @@
 - TLS: DB를 사용하는 로컬·Vercel Preview·Production 런타임은 Supabase Server root certificate를 `SUPABASE_DB_CA_CERT`로 전달하고 인증서·호스트 검증을 강제한다. 인증서 값은 문서나 Git에 기록하지 않는다.
 - DB: `0002_lively_impossible_man.sql`로 소유자 필수 조건과 `profiles`·카테고리 소유권 FK를 보강한다. 운영에서는 백업, 사전 데이터 검증, `db:check`, migration, DB 검증, 앱 배포 순서를 지킨다.
 - CI: 외부 DB에 접속하지 않는 정적 검증에만 의도적 비기능 PEM placeholder를 사용한다. 실제 런타임이나 DB 테스트에는 재사용하지 않는다.
-- 상태: 실제 CA를 사용한 로컬 strict TLS DB 연결, Vercel Preview·Production 인증서 등록, Production DB migration·사후 검증, Preview·Production 로그인 세션 E2E와 Production 배포를 완료했다. 실기기 PWA 설치 검증과 Vercel GitHub 앱 private 저장소 권한 연결만 남았다.
+- 상태: 실제 CA를 사용한 로컬 strict TLS DB 연결, Vercel Preview·Production 인증서 등록, Production DB migration·사후 검증, Preview·Production 로그인 세션 E2E, Production 배포와 Git 자동 배포 연결을 완료했다. 실기기 PWA 설치 검증만 남았다.
