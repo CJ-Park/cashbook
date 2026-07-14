@@ -95,7 +95,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
               return (
                 <label
                   key={option.value}
-                  className={`relative flex min-h-20 cursor-pointer items-center gap-3 rounded-2xl border-2 px-4 py-3 transition focus-within:ring-4 focus-within:ring-[var(--primary-soft)] sm:min-h-24 sm:px-5 ${
+                  className={`relative flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 transition focus-within:ring-4 focus-within:ring-[var(--primary-soft)] sm:min-h-24 sm:justify-start sm:gap-3 sm:px-5 ${
                     isSelected
                       ? isIncome
                         ? "border-[var(--income)] bg-[var(--income-soft)] text-[var(--income)]"
@@ -113,7 +113,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
                   />
                   <span
                     aria-hidden="true"
-                    className={`flex size-10 shrink-0 items-center justify-center rounded-full text-xl font-black sm:size-12 ${
+                    className={`flex size-9 shrink-0 items-center justify-center rounded-full text-lg font-black sm:size-12 sm:text-xl ${
                       isSelected
                         ? isIncome
                           ? "bg-[var(--income)] text-white"
@@ -123,13 +123,13 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
                   >
                     {isIncome ? "+" : "−"}
                   </span>
-                  <span>
-                    <span className="block text-lg font-black sm:text-xl">{option.label}</span>
-                    <span className="block text-sm font-bold opacity-75">{option.description}</span>
+                  <span className="min-w-0">
+                    <span className="block text-base font-black sm:text-xl">{option.label}</span>
+                    <span className="hidden text-sm font-bold opacity-75 sm:block">{option.description}</span>
                   </span>
                   <span
                     aria-hidden="true"
-                    className={`ml-auto size-4 rounded-full border-2 ${
+                    className={`ml-auto hidden size-4 rounded-full border-2 sm:block ${
                       isSelected
                         ? isIncome
                           ? "border-[var(--income)] bg-[var(--income)] ring-4 ring-white"
@@ -212,7 +212,8 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
               onChange={(event) => setAmountDisplay(formatCurrencyInput(event.target.value))}
               placeholder="0"
               aria-describedby="amount-help"
-              className="field-control money min-h-16 pr-16 text-right text-2xl font-black sm:min-h-20 sm:text-3xl"
+              className="field-control money min-h-16 text-right text-2xl font-black sm:min-h-20 sm:text-3xl"
+              style={{ paddingRight: "4rem" }}
             />
             <span
               aria-hidden="true"
