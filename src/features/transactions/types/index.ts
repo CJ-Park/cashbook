@@ -6,6 +6,7 @@ export type TransactionSearchCondition = {
   type?: TransactionType;
   categoryId?: number;
   keyword?: string;
+  validationError?: string;
 };
 
 export type TransactionRow = {
@@ -21,9 +22,21 @@ export type TransactionRow = {
   createdAt: Date;
 };
 
+export type TransactionCursor = {
+  transactionDate: string;
+  id: number;
+};
+
+export type TransactionPage = {
+  transactions: TransactionRow[];
+  nextCursor: TransactionCursor | null;
+};
+
 export type TransactionSearchResult = {
   transactions: TransactionRow[];
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
+  nextCursor: TransactionCursor | null;
+  totalCount: number;
+  totalIncome: bigint;
+  totalExpense: bigint;
+  balance: bigint;
 };

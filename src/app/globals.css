@@ -8,7 +8,7 @@
   --surface-tint: #e9f2f7;
   --text: #17222d;
   --text-soft: #5b6875;
-  --text-faint: #7d8994;
+  --text-faint: #65727f;
   --border: #dce4e9;
   --border-strong: #c8d3da;
   --primary: #1d4d6b;
@@ -79,7 +79,7 @@ button:not(:disabled),
 }
 
 :focus-visible {
-  outline: 3px solid rgb(29 77 107 / 0.3);
+  outline: 3px solid var(--primary);
   outline-offset: 3px;
 }
 
@@ -130,7 +130,7 @@ button:not(:disabled),
 }
 
 .field-control::placeholder {
-  color: #919ba4;
+  color: #6c7884;
 }
 
 .field-control:hover {

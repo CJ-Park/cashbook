@@ -29,8 +29,8 @@ export async function getMonthlyReport(userId: string, year: number): Promise<Mo
   return Array.from({ length: 12 }, (_, index) => {
     const monthNumber = index + 1;
     const row = byMonth.get(monthNumber);
-    const totalIncome = Number(row?.totalIncome ?? 0);
-    const totalExpense = Number(row?.totalExpense ?? 0);
+    const totalIncome = BigInt(row?.totalIncome ?? "0");
+    const totalExpense = BigInt(row?.totalExpense ?? "0");
 
     return {
       month: monthNumber,

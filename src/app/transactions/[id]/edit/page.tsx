@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/features/auth/queries/require-user";
-import { getActiveCategories } from "@/features/categories/queries/get-categories";
+import { getCategoriesForTransactionEdit } from "@/features/categories/queries/get-categories";
 import { getTransactionById } from "@/features/transactions/queries/get-transaction-by-id";
 import { TransactionEditScreen } from "@/features/transactions/screens/TransactionEditScreen";
 
@@ -20,14 +20,13 @@ export default async function TransactionEditPage({ params }: TransactionEditPag
     notFound();
   }
 
-  const [categories, transaction] = await Promise.all([
-    getActiveCategories(user.id),
-    getTransactionById(user.id, transactionId),
-  ]);
+  const transaction = await getTransactionById(user.id, transactionId);
 
   if (!transaction) {
     notFound();
   }
+
+  const categories = await getCategoriesForTransactionEdit(user.id, transaction.categoryId);
 
   return <TransactionEditScreen categories={categories} transaction={transaction} />;
 }

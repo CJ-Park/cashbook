@@ -24,6 +24,10 @@ function redirectWithSessionCookies(
     redirectResponse.cookies.set(cookie);
   });
 
+  redirectResponse.headers.set("Cache-Control", "private, no-store");
+  redirectResponse.headers.set("Pragma", "no-cache");
+  redirectResponse.headers.set("Expires", "0");
+
   return redirectResponse;
 }
 
@@ -38,7 +42,7 @@ export async function updateSession(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet, responseHeaders) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
           });
@@ -47,6 +51,10 @@ export async function updateSession(request: NextRequest) {
 
           cookiesToSet.forEach(({ name, value, options }) => {
             response.cookies.set(name, value, options);
+          });
+
+          Object.entries(responseHeaders).forEach(([name, value]) => {
+            response.headers.set(name, value);
           });
         },
       },

@@ -6,6 +6,10 @@ import type { Category } from "@/db/schema";
 import { SubmitButton } from "@/shared/components/ui/SubmitButton";
 import { formatCurrencyInput } from "@/shared/utils/number";
 import type { TransactionType } from "../types";
+import {
+  isCategoryTypeCompatible,
+  MAX_TRANSACTION_AMOUNT,
+} from "../utils/transaction-validation";
 
 type TransactionFormValues = {
   id?: number;
@@ -35,22 +39,18 @@ const transactionTypes: Array<{
 ];
 
 const paymentMethods = ["현금", "계좌이체", "카드", "간편결제"];
-
-function isCategoryAvailable(category: Category, type: TransactionType) {
-  return category.type === type || category.type === "COMMON";
-}
+const maxAmountDisplayLength = formatCurrencyInput(String(MAX_TRANSACTION_AMOUNT)).length;
 
 export function TransactionForm({ categories, action, defaultValues, mode }: TransactionFormProps) {
   const [type, setType] = useState<TransactionType>(defaultValues?.type ?? "EXPENSE");
+  const initialCategoryId = defaultValues?.categoryId;
   const [categoryId, setCategoryId] = useState(() => {
-    const initialCategoryId = defaultValues?.categoryId;
-
     if (!initialCategoryId) {
       return "";
     }
 
     const initialCategory = categories.find((category) => category.id === initialCategoryId);
-    return initialCategory && isCategoryAvailable(initialCategory, defaultValues?.type ?? "EXPENSE")
+    return initialCategory && isCategoryTypeCompatible(initialCategory.type, defaultValues?.type ?? "EXPENSE")
       ? String(initialCategoryId)
       : "";
   });
@@ -59,11 +59,22 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
   );
 
   const filteredCategories = useMemo(
-    () => categories.filter((category) => isCategoryAvailable(category, type)),
-    [categories, type],
+    () =>
+      categories.filter(
+        (category) =>
+          isCategoryTypeCompatible(category.type, type) &&
+          (category.isActive ||
+            (mode === "edit" &&
+              category.id === initialCategoryId &&
+              String(category.id) === categoryId)),
+      ),
+    [categories, categoryId, initialCategoryId, mode, type],
   );
 
   const numericAmount = amountDisplay.replace(/\D/g, "");
+  const isKeepingInactiveCategory = categories.some(
+    (category) => String(category.id) === categoryId && !category.isActive,
+  );
 
   function changeType(nextType: TransactionType) {
     setType(nextType);
@@ -74,7 +85,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
 
     const selectedCategory = categories.find((category) => String(category.id) === categoryId);
 
-    if (!selectedCategory || !isCategoryAvailable(selectedCategory, nextType)) {
+    if (!selectedCategory || !isCategoryTypeCompatible(selectedCategory.type, nextType)) {
       setCategoryId("");
     }
   }
@@ -95,7 +106,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
               return (
                 <label
                   key={option.value}
-                  className={`relative flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 transition focus-within:ring-4 focus-within:ring-[var(--primary-soft)] sm:min-h-24 sm:justify-start sm:gap-3 sm:px-5 ${
+                  className={`relative flex min-h-16 cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 px-3 py-3 transition focus-within:ring-4 focus-within:ring-[var(--primary)] focus-within:ring-offset-2 sm:min-h-24 sm:justify-start sm:gap-3 sm:px-5 ${
                     isSelected
                       ? isIncome
                         ? "border-[var(--income)] bg-[var(--income-soft)] text-[var(--income)]"
@@ -179,12 +190,14 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
               <option value="">{filteredCategories.length > 0 ? "카테고리를 선택하세요" : "사용 가능한 카테고리가 없습니다"}</option>
               {filteredCategories.map((category) => (
                 <option key={category.id} value={category.id}>
-                  {category.name}
+                  {category.name}{category.isActive ? "" : " (사용 중지됨 · 기존 선택 유지)"}
                 </option>
               ))}
             </select>
             <p className="mt-2 text-sm font-medium text-[var(--text-faint)]">
-              선택한 {type === "INCOME" ? "입금" : "출금"}에 맞는 카테고리만 보여드려요.
+              {isKeepingInactiveCategory
+                ? "기존 내역의 카테고리는 그대로 유지할 수 있어요. 다른 카테고리로 바꾸면 다시 선택할 수 없어요."
+                : `선택한 ${type === "INCOME" ? "입금" : "출금"}에 맞는 카테고리만 보여드려요.`}
             </p>
           </div>
         </div>
@@ -208,6 +221,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
               type="text"
               inputMode="numeric"
               required
+              maxLength={maxAmountDisplayLength}
               value={amountDisplay}
               onChange={(event) => setAmountDisplay(formatCurrencyInput(event.target.value))}
               placeholder="0"
@@ -223,7 +237,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
             </span>
           </span>
           <span id="amount-help" className="mt-2 block text-sm font-medium text-[var(--text-faint)]">
-            숫자만 입력하면 천 단위 쉼표가 자동으로 표시됩니다.
+            숫자만 입력하면 천 단위 쉼표가 자동으로 표시됩니다. 한 건당 최대 {formatCurrencyInput(String(MAX_TRANSACTION_AMOUNT))}원까지 입력할 수 있어요.
           </span>
         </label>
 
@@ -258,7 +272,7 @@ export function TransactionForm({ categories, action, defaultValues, mode }: Tra
         </div>
       </div>
 
-      <div className="flex flex-col-reverse gap-3 border-t border-[var(--border)] bg-[var(--surface-soft)] p-4 sm:flex-row sm:justify-end sm:p-5">
+      <div className="flex flex-col gap-3 border-t border-[var(--border)] bg-[var(--surface-soft)] p-4 sm:flex-row sm:justify-end sm:p-5">
         {mode === "create" ? (
           <SubmitButton
             name="intent"

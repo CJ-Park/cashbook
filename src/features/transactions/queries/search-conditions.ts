@@ -1,19 +1,16 @@
-import { and, eq, gte, ilike, lte, or, type SQL } from "drizzle-orm";
+import { and, eq, gte, lte, or, sql, type SQL } from "drizzle-orm";
 import { transactions } from "@/db/schema";
+import { isValidDateInput, validateOptionalDateRange } from "@/shared/utils/date";
 import type { TransactionSearchCondition } from "../types";
 
-export function isValidTransactionSearchDate(value: string) {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) {
-    return false;
-  }
+export const isValidTransactionSearchDate = isValidDateInput;
 
-  const date = new Date(`${value}T00:00:00.000Z`);
-
-  return !Number.isNaN(date.getTime()) && date.toISOString().slice(0, 10) === value;
+export function escapeLikePattern(value: string) {
+  return value.replaceAll("!", "!!").replaceAll("%", "!%").replaceAll("_", "!_");
 }
 
 function parseDate(value?: string) {
-  if (!value || !isValidTransactionSearchDate(value)) {
+  if (!value || !isValidDateInput(value)) {
     return undefined;
   }
 
@@ -34,13 +31,19 @@ export function parseTransactionSearchParams(
 
   const type = getValue("type");
   const categoryId = Number(getValue("categoryId"));
+  const rawStartDate = getValue("startDate") || undefined;
+  const rawEndDate = getValue("endDate") || undefined;
+  const startDate = parseDate(rawStartDate);
+  const endDate = parseDate(rawEndDate);
 
   return {
-    startDate: parseDate(getValue("startDate")),
-    endDate: parseDate(getValue("endDate")),
+    startDate,
+    endDate,
     type: type === "INCOME" || type === "EXPENSE" ? type : undefined,
-    categoryId: Number.isFinite(categoryId) && categoryId > 0 ? categoryId : undefined,
+    categoryId:
+      Number.isSafeInteger(categoryId) && categoryId > 0 ? categoryId : undefined,
     keyword: getValue("keyword")?.trim() || undefined,
+    validationError: validateOptionalDateRange(rawStartDate, rawEndDate) ?? undefined,
   };
 }
 
@@ -90,8 +93,11 @@ export function buildTransactionConditions(userId: string, condition: Transactio
   }
 
   if (condition.keyword) {
-    const keyword = `%${condition.keyword}%`;
-    const keywordCondition = or(ilike(transactions.title, keyword), ilike(transactions.memo, keyword));
+    const keyword = `%${escapeLikePattern(condition.keyword)}%`;
+    const keywordCondition = or(
+      sql`${transactions.title} ilike ${keyword} escape '!'`,
+      sql`${transactions.memo} ilike ${keyword} escape '!'`,
+    );
 
     if (keywordCondition) {
       conditions.push(keywordCondition);

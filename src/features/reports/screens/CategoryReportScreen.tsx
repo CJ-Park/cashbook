@@ -5,6 +5,7 @@ import { SummaryCard } from "@/shared/components/ui/SummaryCard";
 import { TypeBadge } from "@/shared/components/ui/TypeBadge";
 import { formatCurrency, formatDate } from "@/shared/utils/format";
 import type { CategoryReportCondition, CategoryReportRow } from "../types";
+import { calculateProgressPercentage } from "../utils/calculate-progress-percentage";
 
 type CategoryReportScreenProps = {
   condition: CategoryReportCondition;
@@ -12,8 +13,15 @@ type CategoryReportScreenProps = {
 };
 
 export function CategoryReportScreen({ condition, rows }: CategoryReportScreenProps) {
-  const totalAmount = rows.reduce((total, row) => total + row.totalAmount, 0);
-  const maxAmount = Math.max(...rows.map((row) => row.totalAmount), 1);
+  const zeroAmount = BigInt(0);
+  const totalAmount = rows.reduce(
+    (total, row) => total + row.totalAmount,
+    zeroAmount,
+  );
+  const maxAmount = rows.reduce(
+    (maximum, row) => (row.totalAmount > maximum ? row.totalAmount : maximum),
+    zeroAmount,
+  );
   const periodLabel = getPeriodLabel(condition);
   const summaryTone = condition.type === "INCOME" ? "income" : condition.type === "EXPENSE" ? "expense" : "balance";
   const typeLabel = condition.type === "INCOME" ? "입금만" : condition.type === "EXPENSE" ? "출금만" : "입금·출금 전체";
@@ -84,6 +92,14 @@ export function CategoryReportScreen({ condition, rows }: CategoryReportScreenPr
               </Link>
             </div>
           </form>
+          {condition.validationError ? (
+            <p
+              role="alert"
+              className="mt-4 rounded-2xl bg-[var(--danger-soft)] px-4 py-3 text-sm font-bold text-[var(--danger)]"
+            >
+              {condition.validationError} 날짜를 다시 확인해주세요.
+            </p>
+          ) : null}
         </section>
 
         <section aria-label="카테고리 통계 요약" className="grid gap-4 sm:grid-cols-2">
@@ -136,7 +152,7 @@ export function CategoryReportScreen({ condition, rows }: CategoryReportScreenPr
 
               <ol className="divide-y divide-[var(--border)]">
                 {rows.map((row, index) => {
-                  const progress = Math.max((row.totalAmount / maxAmount) * 100, 2);
+                  const progress = calculateProgressPercentage(row.totalAmount, maxAmount);
                   const progressColor =
                     row.categoryType === "INCOME"
                       ? "var(--income)"

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AppShell } from "@/shared/components/layout/AppShell";
 import { PageHeader } from "@/shared/components/ui/PageHeader";
 import { SummaryCard } from "@/shared/components/ui/SummaryCard";
+import { MAX_SUPPORTED_YEAR, MIN_SUPPORTED_YEAR } from "@/shared/utils/date";
 import { formatCurrency } from "@/shared/utils/format";
 import type { MonthlyReportRow } from "../types";
 
@@ -11,13 +12,16 @@ type MonthlyReportScreenProps = {
 };
 
 export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
-  const hasData = rows.some((row) => row.totalIncome > 0 || row.totalExpense > 0);
+  const zeroAmount = BigInt(0);
+  const hasData = rows.some(
+    (row) => row.totalIncome > zeroAmount || row.totalExpense > zeroAmount,
+  );
   const annualTotal = rows.reduce(
     (total, row) => ({
       income: total.income + row.totalIncome,
       expense: total.expense + row.totalExpense,
     }),
-    { income: 0, expense: 0 },
+    { income: zeroAmount, expense: zeroAmount },
   );
   const annualBalance = annualTotal.income - annualTotal.expense;
 
@@ -41,7 +45,7 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
             <SummaryCard
               label={`${year}년 차액`}
               value={formatCurrency(annualBalance)}
-              tone={annualBalance < 0 ? "expense" : "balance"}
+              tone={annualBalance < zeroAmount ? "expense" : "balance"}
               hint={hasData ? "입금에서 출금을 뺀 금액" : "아직 등록된 내역이 없어요"}
               featured
             />
@@ -69,7 +73,7 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
           </div>
 
           <form className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end">
-            {year > 2000 ? (
+            {year > MIN_SUPPORTED_YEAR ? (
               <Link
                 href={`/reports/monthly?year=${year - 1}`}
                 aria-label={`${year - 1}년 보기`}
@@ -89,8 +93,8 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
                 name="year"
                 type="number"
                 inputMode="numeric"
-                min="2000"
-                max="2100"
+                min={MIN_SUPPORTED_YEAR}
+                max={MAX_SUPPORTED_YEAR}
                 defaultValue={year}
                 className="field-control money text-center font-extrabold"
               />
@@ -100,7 +104,7 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
               조회하기
             </button>
 
-            {year < 2100 ? (
+            {year < MAX_SUPPORTED_YEAR ? (
               <Link
                 href={`/reports/monthly?year=${year + 1}`}
                 aria-label={`${year + 1}년 보기`}
@@ -146,7 +150,8 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
 
           <div className="space-y-3 md:hidden">
             {rows.map((row) => {
-              const isEmptyMonth = row.totalIncome === 0 && row.totalExpense === 0;
+              const isEmptyMonth =
+                row.totalIncome === zeroAmount && row.totalExpense === zeroAmount;
 
               return (
                 <article key={row.month} className="surface-card p-5">
@@ -175,7 +180,9 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
                       <dt className="text-sm font-bold text-[var(--text-soft)]">차액</dt>
                       <dd
                         className={`money mt-1 break-words text-lg font-black ${
-                          row.balance < 0 ? "text-[var(--expense)]" : "text-[var(--primary)]"
+                          row.balance < zeroAmount
+                            ? "text-[var(--expense)]"
+                            : "text-[var(--primary)]"
                         }`}
                       >
                         {formatCurrency(row.balance)}
@@ -212,7 +219,9 @@ export function MonthlyReportScreen({ year, rows }: MonthlyReportScreenProps) {
                     </td>
                     <td
                       className={`money px-6 py-4 text-right font-black ${
-                        row.balance < 0 ? "text-[var(--expense)]" : "text-[var(--primary)]"
+                        row.balance < zeroAmount
+                          ? "text-[var(--expense)]"
+                          : "text-[var(--primary)]"
                       }`}
                     >
                       {formatCurrency(row.balance)}

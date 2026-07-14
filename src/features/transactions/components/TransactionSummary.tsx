@@ -2,9 +2,9 @@ import { SummaryCard } from "@/shared/components/ui/SummaryCard";
 import { formatCurrency } from "@/shared/utils/format";
 
 type TransactionSummaryProps = {
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
+  totalIncome: bigint;
+  totalExpense: bigint;
+  balance: bigint;
 };
 
 export function TransactionSummary({ totalIncome, totalExpense, balance }: TransactionSummaryProps) {

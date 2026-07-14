@@ -5,5 +5,7 @@ export function formatCurrencyInput(value: string) {
     return "";
   }
 
-  return Number(numericValue).toLocaleString("ko-KR");
+  const normalizedValue = numericValue.replace(/^0+(?=\d)/, "");
+
+  return normalizedValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }

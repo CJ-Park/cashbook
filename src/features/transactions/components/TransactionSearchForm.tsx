@@ -127,6 +127,9 @@ export function TransactionSearchForm({ categories, condition }: TransactionSear
           검색하기
         </button>
       </div>
+      <p className="mt-3 text-xs font-bold text-[var(--text-faint)] sm:text-right">
+        엑셀 다운로드는 시작일과 종료일을 모두 지정한 최대 1년 범위에서 사용할 수 있습니다.
+      </p>
     </form>
   );
 }

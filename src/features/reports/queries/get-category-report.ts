@@ -1,6 +1,7 @@
 import { and, desc, eq, gte, lte, sql, type SQL } from "drizzle-orm";
 import { db } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
+import { isValidDateInput, validateOptionalDateRange } from "@/shared/utils/date";
 import type { CategoryReportCondition, CategoryReportRow } from "../types";
 
 export function parseCategoryReportParams(
@@ -12,11 +13,14 @@ export function parseCategoryReportParams(
   };
 
   const type = getValue("type");
+  const rawStartDate = getValue("startDate") || undefined;
+  const rawEndDate = getValue("endDate") || undefined;
 
   return {
-    startDate: getValue("startDate") || undefined,
-    endDate: getValue("endDate") || undefined,
+    startDate: rawStartDate && isValidDateInput(rawStartDate) ? rawStartDate : undefined,
+    endDate: rawEndDate && isValidDateInput(rawEndDate) ? rawEndDate : undefined,
     type: type === "INCOME" || type === "EXPENSE" ? type : undefined,
+    validationError: validateOptionalDateRange(rawStartDate, rawEndDate) ?? undefined,
   };
 }
 
@@ -24,6 +28,10 @@ export async function getCategoryReport(
   userId: string,
   condition: CategoryReportCondition,
 ): Promise<CategoryReportRow[]> {
+  if (condition.validationError) {
+    return [];
+  }
+
   const conditions: SQL[] = [eq(transactions.userId, userId)];
 
   if (condition.startDate) {
@@ -48,13 +56,16 @@ export async function getCategoryReport(
       totalAmount,
     })
     .from(transactions)
-    .innerJoin(categories, eq(transactions.categoryId, categories.id))
+    .innerJoin(
+      categories,
+      and(eq(transactions.categoryId, categories.id), eq(categories.userId, userId)),
+    )
     .where(conditions.length > 0 ? and(...conditions) : undefined)
     .groupBy(categories.id)
     .orderBy(desc(totalAmount));
 
   return rows.map((row) => ({
     ...row,
-    totalAmount: Number(row.totalAmount),
+    totalAmount: BigInt(row.totalAmount),
   }));
 }

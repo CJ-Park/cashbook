@@ -27,6 +27,7 @@
 - 이메일/비밀번호 로그인
 - 대시보드
 - 입출금 내역 등록, 조회, 수정, 삭제
+- 검색 조건을 유지하는 20건 단위 무한 스크롤
 - 날짜, 구분, 카테고리, 검색어 필터
 - 검색 결과 기준 입금 합계, 출금 합계, 차액 표시
 - 카테고리 관리
@@ -64,21 +65,23 @@ MVP에서는 핵심 장부 기능만 구현합니다.
 
 ```bash
 npm install
+npm run db:check
 npm run db:migrate
 npm run dev
 npm run lint
 npm run typecheck
+npm test
 npm run build
 ```
 
-1. `.env.example`을 기준으로 `.env.local`을 준비합니다.
-2. `npm run db:migrate`로 Drizzle migration을 적용합니다.
+1. `.env.example`을 기준으로 `.env.local`을 준비합니다. DB를 사용하는 로컬 실행에도 현재 Supabase 프로젝트의 실제 Server root certificate가 필수입니다.
+2. `npm run db:check`로 migration 정합성을 확인한 뒤 `npm run db:migrate`로 적용합니다.
 3. Supabase Authentication에서 이메일/비밀번호 사용자를 준비합니다.
-4. 로그인 사용자가 카테고리 또는 거래 화면을 처음 열면 사용자 전용 기본 카테고리가 자동 생성됩니다.
+4. 사용자가 처음 로그인해 `profiles` 행이 생성될 때 사용자 전용 기본 카테고리도 한 번만 자동 생성됩니다.
 
 수동 seed 명령은 사용하지 않습니다. 카테고리와 거래는 로그인 계정의 `user.id`로 분리됩니다.
 
-입출금 목록에서 현재 날짜, 구분, 카테고리, 검색어 조건을 유지한 채 엑셀 파일을 내려받을 수 있습니다. 엑셀은 서버 메모리에서 생성되며 로컬 디스크에 저장하지 않습니다.
+입출금 목록에서 시작일과 종료일을 모두 지정한 뒤, 구분·카테고리·검색어를 포함한 현재 조건으로 엑셀을 내려받을 수 있습니다. 다운로드 기간은 시작일과 종료일을 모두 포함해 최대 1년입니다. 엑셀은 서버 메모리에서 생성되며 로컬 디스크에 저장하지 않습니다.
 
 ## 환경변수
 
@@ -87,15 +90,16 @@ npm run build
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `DATABASE_URL`
+- `SUPABASE_DB_CA_CERT` (DB를 사용하는 로컬·Vercel Preview·Production에서 필수, Supabase Server root certificate PEM)
 - `SUPABASE_SERVICE_ROLE_KEY` (현재 미사용, 관리자 권한 기능 추가 시에만 등록)
 
-서버 전용 키는 클라이언트에 노출하지 않습니다.
+서버 전용 키와 인증서는 클라이언트에 노출하지 않습니다. CI의 정적 build에는 DB에 접속할 수 없는 의도적 placeholder PEM만 사용하며, 이 값을 로컬·Preview·Production 런타임에 복사하지 않습니다. `SUPABASE_DB_CA_CERT` 설정과 Production migration 순서는 [DEPLOYMENT.md](./DEPLOYMENT.md)를 따릅니다.
 
 ## Production 배포
 
 - Vercel 프로젝트: `joe-private/cashbook`
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
-- Production 필수 환경변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`
+- 다음 Production 배포 필수 환경변수: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `DATABASE_URL`, `SUPABASE_DB_CA_CERT`
 - 배포 및 검증 절차: [DEPLOYMENT.md](./DEPLOYMENT.md)
 
 ## 앱 설치

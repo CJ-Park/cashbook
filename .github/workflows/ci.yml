@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_PUBLIC_SUPABASE_URL: https://example.supabase.co
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ci-placeholder
+      DATABASE_URL: postgres://ci:ci@127.0.0.1:5432/cashbook
+      # Static build only: CI never connects to a database. A real runtime must use
+      # the Supabase project CA instead of this deliberately non-functional value.
+      SUPABASE_DB_CA_CERT: |
+        -----BEGIN CERTIFICATE-----
+        CI-STATIC-BUILD-ONLY
+        -----END CERTIFICATE-----
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run db:check
+      - run: npm run build

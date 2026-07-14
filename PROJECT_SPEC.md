@@ -81,6 +81,8 @@ src/
     api/
       export/
         route.ts
+      transactions/
+        route.ts
 
   features/
     auth/
@@ -142,7 +144,9 @@ src/
 
 ## DB 설계
 
-Supabase Auth의 `auth.users`를 기본 사용자로 사용한다. 추가 프로필이 필요하면 `profiles` 테이블을 사용한다. `categories.user_id`와 `transactions.user_id`는 로그인 사용자 소유권을 나타내며, 모든 앱 쿼리는 현재 `user.id` 조건을 강제한다.
+Supabase Auth의 `auth.users`를 기본 사용자로 사용하고 `profiles.id`가 `auth.users.id`를 참조한다. `categories.user_id`와 `transactions.user_id`는 `auth.users`를 직접 참조하지 않고 `profiles.id`를 참조해 로그인 사용자 소유권을 나타낸다. 모든 앱 쿼리는 현재 `user.id` 조건을 강제하며, DB도 소유자 `NOT NULL`, `profiles` 소유자 FK, 거래–카테고리 복합 소유권 FK로 방어한다.
+
+아래는 0002 소유권 무결성 migration 적용 후의 스키마다. 2026-07-14 Production 적용과 사후 검증을 완료했으며, 현재 릴리스의 Production 앱 배포와 로그인 세션 기반 E2E는 아직 완료되지 않았다.
 
 ### profiles
 
@@ -159,12 +163,13 @@ create table profiles (
 ```sql
 create table categories (
   id bigserial primary key,
-  user_id uuid,
+  user_id uuid not null references profiles(id),
   name text not null,
   type text not null check (type in ('INCOME', 'EXPENSE', 'COMMON')),
   sort_order integer not null default 0,
   is_active boolean not null default true,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  unique (id, user_id)
 );
 ```
 
@@ -173,22 +178,23 @@ create table categories (
 ```sql
 create table transactions (
   id bigserial primary key,
-  user_id uuid,
+  user_id uuid not null references profiles(id),
   transaction_date date not null,
   type text not null check (type in ('INCOME', 'EXPENSE')),
   category_id bigint not null references categories(id),
   title text not null,
-  amount bigint not null check (amount >= 0),
+  amount bigint not null check (amount between 0 and 999999999999),
   memo text,
   payment_method text,
   created_at timestamptz not null default now(),
-  updated_at timestamptz
+  updated_at timestamptz,
+  foreign key (category_id, user_id) references categories(id, user_id)
 );
 ```
 
 ## 기본 카테고리 예시
 
-기본 카테고리는 로그인 사용자가 카테고리 또는 거래 화면을 처음 조회할 때 해당 `user_id` 기준으로 자동 생성한다. `(user_id, name, type)` unique index로 반복 실행을 안전하게 처리한다.
+기본 카테고리는 성공적인 로그인 직후, 해당 `user_id`의 `profiles` 행이 처음 생성되는 트랜잭션에서 한 번만 자동 생성한다. 카테고리·거래 화면의 일반 조회는 기본 데이터를 생성하지 않는다. `(user_id, name, type)` unique index로 반복 실행을 안전하게 처리한다.
 
 입금 카테고리:
 
@@ -218,11 +224,14 @@ create table transactions (
 create unique index idx_categories_user_name_type_unique
 on categories (user_id, name, type);
 
+create unique index idx_categories_id_user_unique
+on categories (id, user_id);
+
 create index idx_categories_user_active
 on categories (user_id, is_active);
 
-create index idx_transactions_user_date
-on transactions (user_id, transaction_date);
+create index idx_transactions_user_date_id_desc
+on transactions (user_id, transaction_date desc, id desc);
 
 create index idx_transactions_date
 on transactions (transaction_date);
@@ -316,6 +325,8 @@ on transactions (transaction_date desc, id desc);
 
 - `transaction_date desc`
 - `id desc`
+- 첫 화면은 20건을 서버에서 렌더링하고, 아래로 스크롤하면 `(transaction_date, id)` 복합 커서로 20건씩 추가 조회한다.
+- 후속 페이지는 `/api/transactions`에서 동일한 인증·소유권·검색 조건을 적용해 응답한다.
 
 ### 5. 입출금 수정 화면
 
@@ -373,9 +384,6 @@ on transactions (transaction_date desc, id desc);
 파일명 예시:
 
 ```text
-cashbook_all.xlsx
-cashbook_from_2026-01-01.xlsx
-cashbook_to_2026-12-31.xlsx
 cashbook_2026-01-01_2026-12-31.xlsx
 ```
 
@@ -383,6 +391,8 @@ cashbook_2026-01-01_2026-12-31.xlsx
 
 - 종소세 정산용으로 사람이 보기 쉬운 컬럼명을 사용한다.
 - 금액 컬럼은 숫자 타입으로 저장되게 한다.
+- 시작일과 종료일을 모두 필수로 받는다.
+- 시작일과 종료일을 모두 포함한 최대 1년 범위만 허용한다. 예를 들어 `2026-01-01`의 최대 종료일은 `2026-12-31`이다.
 - Vercel 서버리스 환경에서 로컬 디스크에 저장하지 않는다.
 - Route Handler에서 메모리로 생성 후 바로 응답한다.
 
@@ -394,8 +404,10 @@ transactions 관련:
 - `updateTransaction`
 - `deleteTransaction`
 - `getTransactions`
+- `getTransactionPage`
 - `getTransactionById`
 - `getTransactionSummary`
+- `GET /api/transactions`
 
 categories 관련:
 
@@ -419,26 +431,35 @@ type TransactionSearchCondition = {
   type?: 'INCOME' | 'EXPENSE';
   categoryId?: number;
   keyword?: string;
+  validationError?: string;
 };
 ```
 
 ## 검색 결과 타입
 
 ```ts
+type TransactionCursor = {
+  transactionDate: string;
+  id: number;
+};
+
 type TransactionSearchResult = {
   transactions: TransactionRow[];
-  totalIncome: number;
-  totalExpense: number;
-  balance: number;
+  nextCursor: TransactionCursor | null;
+  totalCount: number;
+  totalIncome: bigint;
+  totalExpense: bigint;
+  balance: bigint;
 };
 ```
 
 ## 검색/합계 규칙
 
 - 목록과 합계는 반드시 같은 검색 조건을 사용한다.
-- 합계는 프론트 현재 페이지 데이터만 더하지 않고 DB 기준으로 계산한다.
+- 합계는 프론트 현재 페이지 데이터만 더하지 않고 DB 기준으로 계산하며 `bigint` 정밀도를 유지한다.
 - 기본 정렬은 `transaction_date desc`, `id desc`이다.
-- 초기 검색은 `title` 또는 `memo`에 대한 `ILIKE`로 시작한다.
+- 페이지 크기는 20건이며 offset이 아닌 `(transaction_date, id)` 커서를 사용한다.
+- 초기 검색은 `title` 또는 `memo`에 대한 `ILIKE`로 시작하며 `%`, `_`, escape 문자는 사용자 입력 그대로 검색한다.
 
 ## UX 기준
 
@@ -457,6 +478,8 @@ type TransactionSearchResult = {
 - `SUPABASE_SERVICE_ROLE_KEY`는 클라이언트에 노출 금지
 - `DATABASE_URL`은 클라이언트에 노출 금지
 - 브라우저 노출 가능 키와 서버 전용 키를 구분
+- DB를 사용하는 로컬·Vercel Preview·Production은 `SUPABASE_DB_CA_CERT`에 저장한 해당 Supabase Server root certificate로 서버 인증서와 호스트를 검증
+- DB 인증서 값을 Git, 문서, 로그에 기록 금지
 - 인증되지 않은 사용자는 로그인 화면으로 redirect
 - 모든 장부 페이지는 로그인 필요
 - 초기에는 사용자 1~2명만 쓰는 구조로 단순하게 구현

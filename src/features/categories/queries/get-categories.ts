@@ -93,6 +93,22 @@ export async function getActiveCategories(userId: string) {
     .orderBy(asc(categories.type), asc(categories.sortOrder), asc(categories.name));
 }
 
+export async function getCategoriesForTransactionEdit(
+  userId: string,
+  currentCategoryId: number,
+) {
+  return db
+    .select()
+    .from(categories)
+    .where(
+      and(
+        eq(categories.userId, userId),
+        or(eq(categories.isActive, true), eq(categories.id, currentCategoryId)),
+      ),
+    )
+    .orderBy(asc(categories.type), asc(categories.sortOrder), asc(categories.name));
+}
+
 export async function getActiveCategoriesForTransactionType(
   userId: string,
   type: "INCOME" | "EXPENSE",

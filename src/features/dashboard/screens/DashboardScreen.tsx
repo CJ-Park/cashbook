@@ -12,7 +12,7 @@ type DashboardScreenProps = {
 };
 
 export function DashboardScreen({ data }: DashboardScreenProps) {
-  const balanceHint = data.balance >= 0 ? "입금이 출금보다 많아요" : "출금이 입금보다 많아요";
+  const balanceHint = data.balance >= BigInt(0) ? "입금이 출금보다 많아요" : "출금이 입금보다 많아요";
 
   return (
     <AppShell activeSection="dashboard">
@@ -58,7 +58,7 @@ export function DashboardScreen({ data }: DashboardScreenProps) {
               <SummaryCard
                 label="현재 차액"
                 value={formatCurrency(data.balance)}
-                tone={data.balance < 0 ? "expense" : "balance"}
+                tone={data.balance < BigInt(0) ? "expense" : "balance"}
                 hint={balanceHint}
                 featured
               />

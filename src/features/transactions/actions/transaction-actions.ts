@@ -6,41 +6,34 @@ import { redirect } from "next/navigation";
 import { db } from "@/db/client";
 import { categories, transactions } from "@/db/schema";
 import { requireFreshUser } from "@/features/auth/queries/require-fresh-user";
-import type { TransactionType } from "../types";
+import {
+  isCategoryTypeCompatible,
+  parsePositiveSafeInteger,
+  parseTransactionAmount,
+  parseTransactionDate,
+  parseTransactionType,
+} from "../utils/transaction-validation";
+
+type CategoryQueryExecutor = Pick<typeof db, "select">;
 
 function getRequiredString(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
 }
 
-function parseTransactionType(value: string): TransactionType {
-  if (value !== "INCOME" && value !== "EXPENSE") {
-    throw new Error("Invalid transaction type.");
-  }
-
-  return value;
-}
-
-function parseAmount(value: string) {
-  const amount = Number(value.replaceAll(",", ""));
-
-  if (!Number.isInteger(amount) || amount < 0) {
-    throw new Error("Invalid amount.");
-  }
-
-  return amount;
-}
-
 function parseTransactionForm(formData: FormData) {
-  const transactionDate = getRequiredString(formData, "transactionDate");
+  const transactionDate = parseTransactionDate(getRequiredString(formData, "transactionDate"));
   const type = parseTransactionType(getRequiredString(formData, "type"));
-  const categoryId = Number(getRequiredString(formData, "categoryId"));
+  const categoryId = parsePositiveSafeInteger(
+    getRequiredString(formData, "categoryId"),
+    "카테고리",
+  );
   const title = getRequiredString(formData, "title");
-  const amount = parseAmount(getRequiredString(formData, "amount"));
+  const amount = parseTransactionAmount(getRequiredString(formData, "amount"));
   const memo = getRequiredString(formData, "memo") || null;
   const paymentMethod = getRequiredString(formData, "paymentMethod") || null;
 
-  if (!transactionDate || !categoryId || !title) {
-    throw new Error("Required transaction fields are missing.");
+  if (!title) {
+    throw new Error("내용을 입력해주세요.");
   }
 
   return {
@@ -54,15 +47,35 @@ function parseTransactionForm(formData: FormData) {
   };
 }
 
-async function assertUserCategory(userId: string, categoryId: number) {
-  const [category] = await db
-    .select({ id: categories.id })
+async function assertUserCategory(
+  executor: CategoryQueryExecutor,
+  userId: string,
+  categoryId: number,
+  transactionType: "INCOME" | "EXPENSE",
+  allowInactiveCategoryId?: number,
+) {
+  // Serialize category state/type changes with the transaction write.
+  const [category] = await executor
+    .select({
+      id: categories.id,
+      type: categories.type,
+      isActive: categories.isActive,
+    })
     .from(categories)
-    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId), eq(categories.isActive, true)))
+    .where(and(eq(categories.id, categoryId), eq(categories.userId, userId)))
+    .for("update")
     .limit(1);
 
   if (!category) {
-    throw new Error("Category does not belong to current user.");
+    throw new Error("선택한 카테고리를 사용할 수 없습니다.");
+  }
+
+  if (!isCategoryTypeCompatible(category.type, transactionType)) {
+    throw new Error("입금·출금 구분에 맞는 카테고리를 선택해주세요.");
+  }
+
+  if (!category.isActive && category.id !== allowInactiveCategoryId) {
+    throw new Error("사용 중지된 카테고리는 새 내역에 선택할 수 없습니다.");
   }
 }
 
@@ -72,9 +85,10 @@ export async function createTransaction(formData: FormData) {
   const values = parseTransactionForm(formData);
   const intent = getRequiredString(formData, "intent");
 
-  await assertUserCategory(user.id, values.categoryId);
-
-  await db.insert(transactions).values({ ...values, userId: user.id });
+  await db.transaction(async (tx) => {
+    await assertUserCategory(tx, user.id, values.categoryId, values.type);
+    await tx.insert(transactions).values({ ...values, userId: user.id });
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
@@ -89,19 +103,34 @@ export async function createTransaction(formData: FormData) {
 export async function updateTransaction(formData: FormData) {
   const user = await requireFreshUser();
 
-  const id = Number(getRequiredString(formData, "id"));
-
-  if (!id) {
-    throw new Error("Transaction id is required.");
-  }
+  const id = parsePositiveSafeInteger(getRequiredString(formData, "id"), "거래");
 
   const values = parseTransactionForm(formData);
-  await assertUserCategory(user.id, values.categoryId);
+  await db.transaction(async (tx) => {
+    const [existingTransaction] = await tx
+      .select({ categoryId: transactions.categoryId })
+      .from(transactions)
+      .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)))
+      .for("update")
+      .limit(1);
 
-  await db
-    .update(transactions)
-    .set({ ...values, updatedAt: new Date() })
-    .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
+    if (!existingTransaction) {
+      throw new Error("수정할 거래를 찾을 수 없습니다.");
+    }
+
+    await assertUserCategory(
+      tx,
+      user.id,
+      values.categoryId,
+      values.type,
+      existingTransaction.categoryId,
+    );
+
+    await tx
+      .update(transactions)
+      .set({ ...values, updatedAt: new Date() })
+      .where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
+  });
 
   revalidatePath("/dashboard");
   revalidatePath("/transactions");
@@ -113,11 +142,7 @@ export async function updateTransaction(formData: FormData) {
 export async function deleteTransaction(formData: FormData) {
   const user = await requireFreshUser();
 
-  const id = Number(getRequiredString(formData, "id"));
-
-  if (!id) {
-    throw new Error("Transaction id is required.");
-  }
+  const id = parsePositiveSafeInteger(getRequiredString(formData, "id"), "거래");
 
   await db.delete(transactions).where(and(eq(transactions.id, id), eq(transactions.userId, user.id)));
 
