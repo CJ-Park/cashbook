@@ -4,9 +4,8 @@
 
 - Vercel 프로젝트: `joe-private/cashbook`
 - Production URL: [https://cashbook-iota-neon.vercel.app](https://cashbook-iota-neon.vercel.app)
-- 현재 Production deployment: `dpl_8Vvz7XVxMA4e9NAM4omL6qDEzdGu`
-- Production 앱 소스 commit: `a952b05`
-- 직전 검증된 rollback deployment: `dpl_DD2yaWX31jhEZ58P48a8744V2aB9`
+- Production 추적 기준: Vercel Git이 `main`의 최신 commit을 자동 배포
+- 전체 인증 E2E를 통과한 rollback deployment: `dpl_8Vvz7XVxMA4e9NAM4omL6qDEzdGu` (`a952b05`)
 - 최초 Production 배포 확인일: 2026-07-13
 - 최근 PWA 배포 확인일: 2026-07-14
 - 배포 기준 브랜치: `main`
@@ -116,7 +115,7 @@ npx vercel@latest promote <검증된-candidate-url> --yes --scope joe-private
 - migration 후 검증이 실패하면 새 앱을 배포하지 않고, 사전에 확인한 백업으로 복원한 뒤 기존 Production을 유지한다.
 - 앱 배포 후에만 문제가 생기면 먼저 이전의 검증된 Vercel deployment로 되돌린다. DB 복원이 필요한지는 migration 검증 결과를 기준으로 별도 판단한다.
 - Drizzle migration에 자동 down 절차가 있다고 가정하지 않고, 운영 DB에서 제약을 수동 삭제하지 않는다.
-- 현재 릴리스의 검증된 앱 rollback 대상은 `dpl_DD2yaWX31jhEZ58P48a8744V2aB9`이다.
+- 현재 릴리스의 검증된 앱 rollback 대상은 `dpl_8Vvz7XVxMA4e9NAM4omL6qDEzdGu`이다.
 
 ## PWA 배포 검증
 
