@@ -107,10 +107,12 @@ npm run build
 Production 웹페이지는 PWA 방식으로 휴대폰과 데스크톱에 설치할 수 있습니다.
 
 - Android Chrome·데스크톱 Chrome/Edge: 브라우저의 `앱 설치` 메뉴 사용
-- iPhone/iPad: 브라우저의 `공유` → `홈 화면에 추가` 사용
+- iPhone/iPad: Safari의 `공유` → `홈 화면에 추가`에서 `웹 앱으로 열기(Open as Web App)`를 켠 뒤 추가
 - 설치 후 `살림장부` 아이콘을 누르면 독립 앱 화면으로 실행
 
 현재 PWA는 온라인 전용입니다. 거래 내역과 금액이 기기의 PWA 캐시에 남지 않도록 서비스 워커와 오프라인 장부 기능은 사용하지 않습니다. 자세한 설계는 [PWA_DESIGN.md](./PWA_DESIGN.md)를 참고합니다.
+
+Production의 Manifest·아이콘·설치 조건은 확인했으며, Android와 iPhone/iPad의 실제 설치·standalone 실행은 실기기 최종 확인이 남아 있습니다.
 
 ## 배포 방향
 

@@ -146,7 +146,7 @@ src/
 
 Supabase Auth의 `auth.users`를 기본 사용자로 사용하고 `profiles.id`가 `auth.users.id`를 참조한다. `categories.user_id`와 `transactions.user_id`는 `auth.users`를 직접 참조하지 않고 `profiles.id`를 참조해 로그인 사용자 소유권을 나타낸다. 모든 앱 쿼리는 현재 `user.id` 조건을 강제하며, DB도 소유자 `NOT NULL`, `profiles` 소유자 FK, 거래–카테고리 복합 소유권 FK로 방어한다.
 
-아래는 0002 소유권 무결성 migration 적용 후의 스키마다. 2026-07-14 Production 적용과 사후 검증을 완료했으며, 현재 릴리스의 Production 앱 배포와 로그인 세션 기반 E2E는 아직 완료되지 않았다.
+아래는 0002 소유권 무결성 migration 적용 후의 스키마다. 2026-07-14 Production 적용·사후 검증·앱 배포와 로그인 세션 기반 E2E를 완료했다.
 
 ### profiles
 

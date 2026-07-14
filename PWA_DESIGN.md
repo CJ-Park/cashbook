@@ -37,7 +37,7 @@
 - Next.js Metadata File Convention의 `src/app/manifest.ts`를 사용한다.
 - 별도 PWA 라이브러리나 신규 런타임 의존성은 추가하지 않는다.
 - Android와 데스크톱 Chromium에서는 브라우저 기본 설치 UI를 사용한다.
-- iOS/iPadOS에서는 공유 메뉴의 `홈 화면에 추가` 절차를 사용한다.
+- iOS/iPadOS에서는 공유 메뉴의 `홈 화면에 추가`에서 `웹 앱으로 열기(Open as Web App)`를 켜는 절차를 사용한다.
 - 설치 안내 UI가 실제 사용자에게 필요하면 기본 설치 검증 후 별도 소규모 작업으로 추가한다.
 
 ### 시작 경로와 인증
@@ -144,7 +144,7 @@ Manifest의 아이콘 선언은 다음 목적을 구분한다.
 ## 8. 설치 UX
 
 - Chromium: 주소창 또는 브라우저 메뉴의 기본 `앱 설치` UI를 우선한다.
-- iOS/iPadOS: `공유` → `홈 화면에 추가` 방식으로 설치한다.
+- iOS/iPadOS: Safari의 `공유` → `홈 화면에 추가` → `웹 앱으로 열기(Open as Web App)`를 켜서 설치한다.
 - 설치된 상태에서는 앱이 `standalone`으로 열려야 한다.
 - 사용자 정의 설치 버튼은 플랫폼마다 동작이 달라 1차 범위에서 제외한다.
 - 실제 사용자에게 설치 과정이 어렵다면 로그인 화면에 간단한 플랫폼별 안내를 추가하되, 이미 standalone으로 실행 중일 때는 숨긴다.
@@ -159,6 +159,9 @@ Manifest의 아이콘 선언은 다음 목적을 구분한다.
 - `/manifest.webmanifest`가 `200`과 올바른 manifest Content-Type으로 응답
 - 모든 아이콘 URL이 `200`으로 응답
 - manifest가 Proxy 인증 처리 없이 제공됨
+- Production Chrome 자동화에서 비공개 컨텍스트 고유의 `in-incognito`를 제외한 설치 차단 오류가 0건
+- 일반 192·512, maskable 512, Apple 180 아이콘의 응답·MIME·실제 픽셀 크기가 선언과 일치
+- 서비스 워커 등록과 Cache Storage key가 0개
 
 ### 브라우저·기기 검증
 
@@ -176,7 +179,8 @@ Manifest의 아이콘 선언은 다음 목적을 구분한다.
 ### Production 검증
 
 - Vercel Production 배포 후 실제 도메인에서 manifest와 아이콘 확인
-- 설치 후 재실행과 세션 만료 흐름 확인
+- 웹 컨텍스트의 세션 만료 redirect와 로그아웃 보호 흐름 확인
+- 실제 설치 후 아이콘·standalone 재실행과 설치 앱 내부 세션 흐름은 Android·iOS 실기기에서 추가 확인
 - 문제가 생기면 manifest 연결과 아이콘 metadata만 되돌릴 수 있어야 함
 
 ## 10. 구현 순서
