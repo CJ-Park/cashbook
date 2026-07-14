@@ -1,6 +1,6 @@
 # PWA 설치 지원 설계
 
-- 상태: 로컬 구현·검증 완료, Production 및 실제 기기 검증 전
+- 상태: Production 배포·설치 조건 검증 완료, Android·iOS 실제 기기 검증 전
 - 작성일: 2026-07-14
 - 대상: `cashbook` Post-MVP PWA 설치 지원
 
